@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "nft1",
+      "description": "A vibrant, abstract digital artwork of a crystalline fox.",
+      "imageUrl": "https://images.unsplash.com/photo-1719635410889-fcd34de71b9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhYnN0cmFjdCUyMGFuaW1hbHxlbnwwfHx8fDE3NjIzMjA1NDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract animal"
+    },
+    {
+      "id": "nft2",
+      "description": "A pixelated gift box with a glowing ribbon.",
+      "imageUrl": "https://images.unsplash.com/photo-1634320714682-ae8b9c9cee60?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwaXhlbCUyMGFydHxlbnwwfHx8fDE3NjIyNTIxNDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pixel art"
+    },
+    {
+      "id": "nft3",
+      "description": "A holographic token with the TON diamond logo.",
+      "imageUrl": "https://images.unsplash.com/photo-1667984510031-c5670c18c1ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxob2xvZ3JhcGhpYyUyMGxvZ298ZW58MHx8fHwxNzYyMzIwNTUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "holographic logo"
+    },
+    {
+      "id": "nft4",
+      "description": "A futuristic cat wearing cybernetic glasses.",
+      "imageUrl": "https://images.unsplash.com/photo-1523131034215-07268de1ab51?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjeWJlcnB1bmslMjBjYXR8ZW58MHx8fHwxNzYyMzIwNTQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cyberpunk cat"
+    },
+    {
+      "id": "nft5",
+      "description": "An enchanted sword glowing with a blue light.",
+      "imageUrl": "https://images.unsplash.com/photo-1598669266730-cadf86c0c37f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxmYW50YXN5JTIwd2VhcG9ufGVufDB8fHx8MTc2MjIyNTc1Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy weapon"
+    },
+    {
+      "id": "nft6",
+      "description": "A retro-style boombox floating in space.",
+      "imageUrl": "https://images.unsplash.com/photo-1744472317956-cb33d3012ade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxyZXRybyUyMHRlY2h8ZW58MHx8fHwxNzYyMjMyMjE2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "retro tech"
+    },
+    {
+      "id": "nft7",
+      "description": "A geometric whale swimming in a digital ocean.",
+      "imageUrl": "https://images.unsplash.com/photo-1705765843788-81ab90891f15?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxnZW9tZXRyaWMlMjBhbmltYWx8ZW58MHx8fHwxNzYyMzIwNTUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "geometric animal"
+    },
+    {
+      "id": "nft8",
+      "description": "A floating island with a single, glowing tree.",
+      "imageUrl": "https://images.unsplash.com/photo-1548445929-4f60a497f851?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmYW50YXN5JTIwbGFuZHNjYXBlfGVufDB8fHx8MTc2MjMwNTMyNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy landscape"
+    },
+    {
+      "id": "nft9",
+      "description": "A robotic bee with intricate wings.",
+      "imageUrl": "https://images.unsplash.com/photo-1690992494559-615cc6695b05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyb2JvdGljJTIwaW5zZWN0fGVufDB8fHx8MTc2MjMyMDU1MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "robotic insect"
+    },
+    {
+      "id": "userAvatar",
+      "description": "A placeholder for a user avatar.",
+      "imageUrl": "https://images.unsplash.com/photo-1689997665293-c798b812a244?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cG9ydHJhaXQlMjBwZXJzb258ZW58MHx8fHwxNzYyMzIwNTUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "portrait person"
+    }
+  ]
 }

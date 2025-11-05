@@ -1,3 +1,147 @@
-export default function Home() {
-  return <></>;
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { nfts } from '@/lib/data';
+import { NftCard } from '@/components/nft-card';
+import { Search } from 'lucide-react';
+
+export default function MarketplacePage() {
+  const listedNfts = nfts.filter((nft) => nft.isListed);
+
+  return (
+    <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <aside className="lg:col-span-1">
+          <Card className="sticky top-24">
+            <CardHeader>
+              <CardTitle className="font-headline">Filters</CardTitle>
+              <CardDescription>
+                Refine your search for the perfect gift.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input placeholder="Search by name or ID..." className="pl-10" />
+              </div>
+
+              <Accordion type="multiple" defaultValue={['collections', 'price']}>
+                <AccordionItem value="collections">
+                  <AccordionTrigger className="font-semibold">
+                    Collections
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="col-crypto-critters" />
+                      <Label htmlFor="col-crypto-critters">Crypto Critters</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="col-pixel-presents" />
+                      <Label htmlFor="col-pixel-presents">Pixel Presents</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="col-ton-treasures" />
+                      <Label htmlFor="col-ton-treasures">TON Treasures</Label>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="price">
+                  <AccordionTrigger className="font-semibold">Price</AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input type="number" placeholder="Min" />
+                      <Input type="number" placeholder="Max" />
+                    </div>
+                    <Button className="w-full bg-primary/80 hover:bg-primary text-primary-foreground">Apply</Button>
+                  </AccordionContent>
+                </AccordionItem>
+                 <AccordionItem value="model">
+                  <AccordionTrigger className="font-semibold">
+                    Model
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="model-common" />
+                      <Label htmlFor="model-common">Common</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="model-rare" />
+                      <Label htmlFor="model-rare">Rare</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="model-epic" />
+                      <Label htmlFor="model-epic">Epic</Label>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="background">
+                  <AccordionTrigger className="font-semibold">
+                    Background
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="bg-space" />
+                      <Label htmlFor="bg-space">Space</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="bg-neon" />
+                      <Label htmlFor="bg-neon">Neon</Label>
+                    </div>
+                     <div className="flex items-center space-x-2">
+                      <Checkbox id="bg-holographic" />
+                      <Label htmlFor="bg-holographic">Holographic</Label>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        </aside>
+        <main className="lg:col-span-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <h1 className="text-4xl font-headline font-bold text-foreground">
+              NFT Marketplace
+            </h1>
+            <Select defaultValue="price-low-high">
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="price-low-high">Price: Low to High</SelectItem>
+                <SelectItem value="price-high-low">Price: High to Low</SelectItem>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="rarity">Rarity</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {listedNfts.map((nft) => (
+              <NftCard key={nft.id} nft={nft} />
+            ))}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }
