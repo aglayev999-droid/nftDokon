@@ -92,10 +92,10 @@ export default function Header() {
         </Sheet>
         <div className="flex flex-1 items-center justify-end space-x-4">
            <Button variant="outline" className="font-semibold">
-              <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/20 text-primary mr-2">
+              0 UZS
+              <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/20 text-primary ml-2">
                   <Plus className="h-4 w-4" />
               </div>
-              0 UZS
             </Button>
           <Button className="font-bold">
              {isTelegram ? 'Ulandi' : 'Hamyonni ulash'}
