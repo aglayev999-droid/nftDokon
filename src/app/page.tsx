@@ -32,6 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetDescription,
 } from '@/components/ui/sheet';
 
 export default function MarketplacePage() {
@@ -146,6 +147,10 @@ export default function MarketplacePage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Filtrlar</SheetTitle>
+                    <SheetDescription>Qidiruvingizni mukammallashtirish uchun filtlar.</SheetDescription>
+                  </SheetHeader>
                    <div className="h-full overflow-y-auto">
                     {filtersContent}
                   </div>
