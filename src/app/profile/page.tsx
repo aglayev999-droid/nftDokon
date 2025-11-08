@@ -30,7 +30,7 @@ export default function ProfilePage() {
             alt={user.username}
             width={128}
             height={128}
-            className="rounded-full border-4 border-primary"
+            className="rounded-full border-4 border-primary object-cover"
             data-ai-hint={user.avatarHint}
           />
         </div>
