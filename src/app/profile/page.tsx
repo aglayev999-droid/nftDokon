@@ -5,7 +5,7 @@ import { user } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Diamond, Gift, HandCoins, Users, Wallet } from 'lucide-react';
+import { Diamond, Gift, HandCoins, Users } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 
 export default function ProfilePage() {
@@ -23,7 +23,7 @@ export default function ProfilePage() {
     <div className="container mx-auto max-w-2xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center gap-4 mb-8">
         <div className="relative">
-          <div className="w-24 h-24 rounded-2xl bg-green-400 flex items-center justify-center">
+          <div className="w-24 h-24 rounded-full bg-green-400 flex items-center justify-center">
              <span className="text-4xl font-bold text-white">
                {user.username.charAt(0).toUpperCase()}
              </span>
@@ -68,7 +68,7 @@ export default function ProfilePage() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-             <CardTitle className="font-headline">{t('portalsLevel')} {user.portalsLevel}</CardTitle>
+             <CardTitle className="font-headline">{t('level')} {user.portalsLevel}</CardTitle>
              <span className="text-sm font-bold text-primary">{user.portalsLevel * 20}%</span>
           </div>
         </CardHeader>
@@ -77,8 +77,8 @@ export default function ProfilePage() {
            <div className="grid grid-cols-2 gap-4 text-sm">
              <div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                   <Wallet className="w-4 h-4" />
-                   <span>{t('earned')} (UZS)</span>
+                   <div className="w-4 h-4 font-bold text-center">UZS</div>
+                   <span>{t('earned')}</span>
                 </div>
                 <p className="font-bold text-lg">{user.friendsVolume}</p>
              </div>
@@ -93,7 +93,7 @@ export default function ProfilePage() {
             <div className="text-center">
                  <p className="text-sm text-muted-foreground">{t('toNextLevel')}</p>
                  <p className="font-bold text-primary flex items-center justify-center gap-1">
-                    <Diamond className="w-4 h-4" /> 20000.01
+                    <Diamond className="w-4 h-4" /> 0
                  </p>
             </div>
            <Button onClick={copyToClipboard} className="w-full font-bold">{t('inviteFriends')}</Button>

@@ -49,13 +49,15 @@ export default function Header() {
   ];
 
   useEffect(() => {
-    if (window.Telegram && window.Telegram.WebApp) {
-      setIsTelegram(true);
-      window.Telegram.WebApp.ready();
+    if (typeof window !== 'undefined') {
+      if (window.Telegram && window.Telegram.WebApp) {
+        setIsTelegram(true);
+        window.Telegram.WebApp.ready();
+      }
+      const storedTheme = localStorage.getItem('theme') || 'dark';
+      setTheme(storedTheme);
+      document.documentElement.className = storedTheme;
     }
-    const storedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(storedTheme);
-    document.documentElement.className = storedTheme;
   }, []);
 
   const handleThemeChange = (value: string) => {
@@ -66,7 +68,7 @@ export default function Header() {
 
 
   return (
-    <header className="sticky top-0 z-50 hidden w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:block">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
@@ -90,38 +92,39 @@ export default function Header() {
             ))}
           </nav>
         </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={t('openNavigation')}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <Link href="/" className="flex items-center">
-              <Gift className="h-6 w-6 text-primary" />
-              <span className="ml-2 font-bold font-headline">{t('appName')}</span>
-            </Link>
-            <div className="mt-8 flex flex-col space-y-4">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'text-lg font-medium transition-colors hover:text-foreground/80',
-                    pathname === item.href ? 'text-foreground' : 'text-foreground/60'
-                  )}
+        <div className="md:hidden">
+            <Sheet>
+            <SheetTrigger asChild>
+                <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('openNavigation')}
                 >
-                  {item.name}
+                <Menu className="h-5 w-5" />
+                </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+                <Link href="/" className="flex items-center">
+                <Gift className="h-6 w-6 text-primary" />
+                <span className="ml-2 font-bold font-headline">{t('appName')}</span>
                 </Link>
-              ))}
-            </div>
-          </SheetContent>
-        </Sheet>
+                <div className="mt-8 flex flex-col space-y-4">
+                {navigation.map((item) => (
+                    <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                        'text-lg font-medium transition-colors hover:text-foreground/80',
+                        pathname === item.href ? 'text-foreground' : 'text-foreground/60'
+                    )}
+                    >
+                    {item.name}
+                    </Link>
+                ))}
+                </div>
+            </SheetContent>
+            </Sheet>
+        </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
            <Button variant="outline" className="font-semibold">
               0 UZS
@@ -129,13 +132,13 @@ export default function Header() {
                   <Plus className="h-4 w-4" />
               </div>
             </Button>
-          <Button className="font-bold">
+          <Button className="font-bold hidden sm:flex">
              {isTelegram ? t('connected') : t('connectWallet')}
           </Button>
            <Dialog>
               <DialogTrigger asChild>
                  <Button variant="ghost" size="icon">
-                    <Settings className="h-5 w-5" />
+                    <Settings className="h-5 w-5 text-foreground" />
                  </Button>
               </DialogTrigger>
               <DialogContent>
