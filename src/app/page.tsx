@@ -146,7 +146,9 @@ export default function MarketplacePage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent>
-                  {filtersContent}
+                   <div className="h-full overflow-y-auto">
+                    {filtersContent}
+                  </div>
                 </SheetContent>
               </Sheet>
               <Select defaultValue="price-low-high">
