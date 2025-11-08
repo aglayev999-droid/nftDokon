@@ -4,9 +4,16 @@
 import { useState, useEffect } from 'react';
 import { Gift } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from '@/context/language-context';
+
 
 export default function LoadingScreen() {
   const [progress, setProgress] = useState(0);
+  const { translations } = useLanguage();
+
+  const t = (key: string) => {
+    return translations[key] || key;
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,7 +35,7 @@ export default function LoadingScreen() {
         <div className="flex items-center gap-3">
           <Gift className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-headline font-bold text-foreground">
-            NFT KERAK
+            {t('appName')}
           </h1>
         </div>
         <Progress value={progress} className="w-48 h-1.5" />

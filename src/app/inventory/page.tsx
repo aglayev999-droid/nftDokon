@@ -16,10 +16,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { nfts as allNfts, Nft } from '@/lib/data';
 import { PlusCircle, Upload, Send } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '@/context/language-context';
+
 
 export default function InventoryPage() {
   const [nfts, setNfts] = useState<Nft[]>(allNfts);
   const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
+  const { translations } = useLanguage();
+
+  const t = (key: string) => {
+    return translations[key] || key;
+  };
 
   const listedNfts = nfts.filter((nft) => nft.isListed);
   const unlistedNfts = nfts.filter((nft) => !nft.isListed);
@@ -49,8 +56,9 @@ export default function InventoryPage() {
         <div className="col-span-full text-center py-16">
           <p className="text-muted-foreground">
             {inWithdrawMode
-              ? 'Yechib olish uchun NFT mavjud emas.'
-              : "Sizda bu bo'limda NFTlar yo'q."}
+              ? t('noNftsToWithdraw')
+              : t('noNftsInSection')
+            }
           </p>
         </div>
       );
@@ -79,26 +87,25 @@ export default function InventoryPage() {
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-4xl font-headline font-bold text-foreground">
-          Mening inventarim
+          {t('myInventory')}
         </h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Yangi qo'shish/zarb qilish
+                {t('addOrMint')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>NFT qo'shish</AlertDialogTitle>
+                <AlertDialogTitle>{t('addNft')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Hurmatli mijoz, inventarga NFT qo'shish uchun telegramdagi
-                  NFTingizni @nullprime shu odamga yuboring!
+                  {t('addNftDescription')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogAction>Tushunarli</AlertDialogAction>
+                <AlertDialogAction>{t('understood')}</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -107,14 +114,14 @@ export default function InventoryPage() {
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
                 <Upload className="mr-2 h-4 w-4" />
-                NFTni yechib olish
+                {t('withdrawNft')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="max-w-4xl">
               <AlertDialogHeader>
-                <AlertDialogTitle>NFTlarni yechib olish</AlertDialogTitle>
+                <AlertDialogTitle>{t('withdrawNfts')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Yechib olmoqchi bo'lgan NFTlaringizni tanlang.
+                  {t('selectNftsToWithdraw')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
@@ -126,7 +133,7 @@ export default function InventoryPage() {
                   onClick={handleWithdraw}
                 >
                   <Send className="mr-2 h-4 w-4" />
-                  {selectedNfts.size} ta NFT yechish
+                  {t('withdrawNSelected', { count: selectedNfts.size })}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -136,12 +143,12 @@ export default function InventoryPage() {
 
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
-          <TabsTrigger value="all">Barchasi ({nfts.length})</TabsTrigger>
+          <TabsTrigger value="all">{t('all')} ({nfts.length})</TabsTrigger>
           <TabsTrigger value="listed">
-            Ro'yxatda ({listedNfts.length})
+            {t('listed')} ({listedNfts.length})
           </TabsTrigger>
           <TabsTrigger value="unlisted">
-            Ro'yxatdan tashqari ({unlistedNfts.length})
+            {t('unlisted')} ({unlistedNfts.length})
           </TabsTrigger>
         </TabsList>
 
@@ -153,7 +160,7 @@ export default function InventoryPage() {
           ) : (
             <div className="col-span-full text-center py-16">
               <p className="text-muted-foreground">
-                Sizning inventaringiz bo'sh.
+                {t('inventoryEmpty')}
               </p>
             </div>
           )}
@@ -166,7 +173,7 @@ export default function InventoryPage() {
           ) : (
             <div className="col-span-full text-center py-16">
               <p className="text-muted-foreground">
-                Sizda ro'yxatga olingan NFTlar yo'q.
+                {t('noListedNfts')}
               </p>
             </div>
           )}
@@ -179,7 +186,7 @@ export default function InventoryPage() {
           ) : (
             <div className="col-span-full text-center py-16">
               <p className="text-muted-foreground">
-                Sizda ro'yxatdan o'tmagan NFTlar yo'q.
+                {t('noUnlistedNfts')}
               </p>
             </div>
           )}

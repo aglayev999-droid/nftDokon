@@ -31,31 +31,37 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetDescription,
+  SheetTrigger,
 } from '@/components/ui/sheet';
+import { useLanguage } from '@/context/language-context';
 
 export default function MarketplacePage() {
   const listedNfts: any[] = [];
+  const { translations } = useLanguage();
+
+  const t = (key: string) => {
+    return translations[key] || key;
+  };
 
   const filtersContent = (
     <Card className="border-none shadow-none">
       <CardHeader>
-        <CardTitle className="font-headline">Filtrlar</CardTitle>
+        <CardTitle className="font-headline">{t('filters')}</CardTitle>
         <CardDescription>
-          Mukammal sovg'a uchun qidiruvni sozlang.
+          {t('filterDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder="Nomi yoki ID bo'yicha qidirish..." className="pl-10" />
+          <Input placeholder={t('searchByNameOrId')} className="pl-10" />
         </div>
 
         <Accordion type="multiple" defaultValue={['collections', 'price']}>
           <AccordionItem value="collections">
             <AccordionTrigger className="font-semibold">
-              To'plamlar
+              {t('collections')}
             </AccordionTrigger>
             <AccordionContent className="space-y-2">
               <div className="flex items-center space-x-2">
@@ -73,50 +79,50 @@ export default function MarketplacePage() {
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="price">
-            <AccordionTrigger className="font-semibold">Narx</AccordionTrigger>
+            <AccordionTrigger className="font-semibold">{t('price')}</AccordionTrigger>
             <AccordionContent className="space-y-4">
               <div className="flex gap-2">
-                <Input type="number" placeholder="Min" />
-                <Input type="number" placeholder="Max" />
+                <Input type="number" placeholder={t('min')} />
+                <Input type="number" placeholder={t('max')} />
               </div>
-              <Button className="w-full">Qo'llash</Button>
+              <Button className="w-full">{t('apply')}</Button>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="model">
             <AccordionTrigger className="font-semibold">
-              Model
+              {t('model')}
             </AccordionTrigger>
             <AccordionContent className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox id="model-common" />
-                <Label htmlFor="model-common">Oddiy</Label>
+                <Label htmlFor="model-common">{t('common')}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="model-rare" />
-                <Label htmlFor="model-rare">Noyob</Label>
+                <Label htmlFor="model-rare">{t('rare')}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="model-epic" />
-                <Label htmlFor="model-epic">Epik</Label>
+                <Label htmlFor="model-epic">{t('epic')}</Label>
               </div>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="background">
             <AccordionTrigger className="font-semibold">
-              Fon
+              {t('background')}
             </AccordionTrigger>
             <AccordionContent className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox id="bg-space" />
-                <Label htmlFor="bg-space">Fazo</Label>
+                <Label htmlFor="bg-space">{t('space')}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="bg-neon" />
-                <Label htmlFor="bg-neon">Neon</Label>
+                <Label htmlFor="bg-neon">{t('neon')}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="bg-holographic" />
-                <Label htmlFor="bg-holographic">Gologramma</Label>
+                <Label htmlFor="bg-holographic">{t('holographic')}</Label>
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -136,20 +142,20 @@ export default function MarketplacePage() {
         <main className="lg:col-span-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <h1 className="text-4xl font-headline font-bold text-foreground">
-              NFT Bozori
+              {t('nftMarketplace')}
             </h1>
             <div className="flex gap-2 w-full sm:w-auto">
                <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" className="lg:hidden flex-1">
                     <SlidersHorizontal className="mr-2 h-4 w-4" />
-                    Filtr
+                    {t('filters')}
                   </Button>
                 </SheetTrigger>
                 <SheetContent>
                   <SheetHeader>
-                    <SheetTitle>Filtrlar</SheetTitle>
-                    <SheetDescription>Qidiruvingizni mukammallashtirish uchun filtlar.</SheetDescription>
+                    <SheetTitle>{t('filters')}</SheetTitle>
+                    <SheetDescription>{t('filterDescriptionMobile')}</SheetDescription>
                   </SheetHeader>
                    <div className="h-full overflow-y-auto">
                     {filtersContent}
@@ -158,13 +164,13 @@ export default function MarketplacePage() {
               </Sheet>
               <Select defaultValue="price-low-high">
                 <SelectTrigger className="w-full sm:w-[180px] flex-1">
-                  <SelectValue placeholder="Saralash" />
+                  <SelectValue placeholder={t('sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="price-low-high">Narx: Pastdan yuqoriga</SelectItem>
-                  <SelectItem value="price-high-low">Narx: Yuqoridan pastga</SelectItem>
-                  <SelectItem value="newest">Eng yangi</SelectItem>
-                  <SelectItem value="rarity">Noyobligi</SelectItem>
+                  <SelectItem value="price-low-high">{t('priceLowToHigh')}</SelectItem>
+                  <SelectItem value="price-high-low">{t('priceHighToLow')}</SelectItem>
+                  <SelectItem value="newest">{t('newest')}</SelectItem>
+                  <SelectItem value="rarity">{t('rarity')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -175,7 +181,7 @@ export default function MarketplacePage() {
             </div>
              ) : (
                 <div className="col-span-full text-center py-16">
-                    <p className="text-muted-foreground">Bozorda hozircha hech narsa yo'q.</p>
+                    <p className="text-muted-foreground">{t('nothingOnMarketplace')}</p>
                 </div>
             )}
         </main>

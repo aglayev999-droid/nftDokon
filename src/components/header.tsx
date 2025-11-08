@@ -23,13 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const navigation = [
-  { name: 'Bozor', href: '/' },
-  { name: 'Inventarim', href: '/inventory' },
-  { name: 'Auksion', href: '/auction' },
-  { name: 'Profil', href: '/profile' },
-];
+import { useLanguage } from '@/context/language-context';
 
 declare global {
   interface Window {
@@ -40,7 +34,19 @@ declare global {
 export default function Header() {
   const pathname = usePathname();
   const [isTelegram, setIsTelegram] = useState(false);
+  const { language, setLanguage, translations } = useLanguage();
   const [theme, setTheme] = useState('dark');
+
+  const t = (key: string) => {
+    return translations[key] || key;
+  };
+
+  const navigation = [
+    { name: t('market'), href: '/' },
+    { name: t('inventory'), href: '/inventory' },
+    { name: t('auction'), href: '/auction' },
+    { name: t('profile'), href: '/profile' },
+  ];
 
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
@@ -66,7 +72,7 @@ export default function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Gift className="h-6 w-6 text-primary" />
             <span className="hidden font-bold sm:inline-block font-headline">
-              NFT kerak
+              {t('appName')}
             </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -90,7 +96,7 @@ export default function Header() {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              aria-label="Navigatsiyani ochish"
+              aria-label={t('openNavigation')}
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -98,7 +104,7 @@ export default function Header() {
           <SheetContent side="left">
             <Link href="/" className="flex items-center">
               <Gift className="h-6 w-6 text-primary" />
-              <span className="ml-2 font-bold font-headline">NFT kerak</span>
+              <span className="ml-2 font-bold font-headline">{t('appName')}</span>
             </Link>
             <div className="mt-8 flex flex-col space-y-4">
               {navigation.map((item) => (
@@ -124,7 +130,7 @@ export default function Header() {
               </div>
             </Button>
           <Button className="font-bold">
-             {isTelegram ? 'Ulandi' : 'Hamyonni ulash'}
+             {isTelegram ? t('connected') : t('connectWallet')}
           </Button>
            <Dialog>
               <DialogTrigger asChild>
@@ -134,14 +140,14 @@ export default function Header() {
               </DialogTrigger>
               <DialogContent>
                  <DialogHeader>
-                    <DialogTitle>Sozlamalar</DialogTitle>
+                    <DialogTitle>{t('settings')}</DialogTitle>
                  </DialogHeader>
                  <div className="space-y-4">
                     <div className="space-y-2">
-                       <Label htmlFor="language">Til</Label>
-                       <Select defaultValue="uz">
+                       <Label htmlFor="language">{t('language')}</Label>
+                       <Select value={language} onValueChange={(value) => setLanguage(value as 'uz' | 'ru' | 'en')}>
                           <SelectTrigger id="language">
-                             <SelectValue placeholder="Tilni tanlang" />
+                             <SelectValue placeholder={t('selectLanguage')} />
                           </SelectTrigger>
                           <SelectContent>
                              <SelectItem value="uz">O'zbek</SelectItem>
@@ -151,14 +157,14 @@ export default function Header() {
                        </Select>
                     </div>
                     <div className="space-y-2">
-                       <Label htmlFor="theme">Mavzu</Label>
+                       <Label htmlFor="theme">{t('theme')}</Label>
                        <Select value={theme} onValueChange={handleThemeChange}>
                           <SelectTrigger id="theme">
-                             <SelectValue placeholder="Mavzuni tanlang" />
+                             <SelectValue placeholder={t('selectTheme')} />
                           </SelectTrigger>
                           <SelectContent>
-                             <SelectItem value="light">Yorug'</SelectItem>
-                             <SelectItem value="dark">Qorong'u</SelectItem>
+                             <SelectItem value="light">{t('light')}</SelectItem>
+                             <SelectItem value="dark">{t('dark')}</SelectItem>
                           </SelectContent>
                        </Select>
                     </div>

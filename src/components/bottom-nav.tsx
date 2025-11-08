@@ -5,16 +5,22 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Store, LayoutGrid, User, Gavel } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const navigation = [
-  { name: 'Bozor', href: '/', icon: Store },
-  { name: 'Inventar', href: '/inventory', icon: LayoutGrid },
-  { name: 'Auksion', href: '/auction', icon: Gavel },
-  { name: 'Profil', href: '/profile', icon: User },
-];
+import { useLanguage } from '@/context/language-context';
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { translations } = useLanguage();
+
+  const t = (key: string) => {
+    return translations[key] || key;
+  };
+  
+  const navigation = [
+    { name: t('market'), href: '/', icon: Store },
+    { name: t('inventory'), href: '/inventory', icon: LayoutGrid },
+    { name: t('auction'), href: '/auction', icon: Gavel },
+    { name: t('profile'), href: '/profile', icon: User },
+  ];
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t border-border/40">

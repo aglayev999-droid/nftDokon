@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from './ui/card';
 import { Tag } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 interface NftCardProps {
   nft: Nft;
@@ -17,6 +18,8 @@ interface NftCardProps {
 }
 
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
+  const { translations } = useLanguage();
+  const t = (key: string) => translations[key] || key;
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
@@ -43,11 +46,11 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         {action === 'buy' ? (
-          <Button className="w-full font-bold">Sotib olish</Button>
+          <Button className="w-full font-bold">{t('buy')}</Button>
         ) : (
           <div className="w-full grid grid-cols-2 gap-2">
-            <Button variant="outline" className="w-full">Sotish</Button>
-            <Button variant="outline" className="w-full">Yuborish</Button>
+            <Button variant="outline" className="w-full">{t('sell')}</Button>
+            <Button variant="outline" className="w-full">{t('send')}</Button>
           </div>
         )}
       </CardFooter>
