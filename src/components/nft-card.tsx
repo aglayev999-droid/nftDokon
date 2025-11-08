@@ -38,7 +38,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         <div className="flex items-center gap-2 text-primary font-bold text-2xl">
           <Tag className="w-5 h-5 text-accent" />
           <span>{nft.price}</span>
-          <span className="text-sm text-muted-foreground font-normal">TON</span>
+          <span className="text-sm text-muted-foreground font-normal">UZS</span>
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">

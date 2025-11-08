@@ -48,7 +48,7 @@ export default function ProfilePage() {
           <StatCard
             icon={BarChart}
             title="Savdo hajmi"
-            value={`${user.volume} TON`}
+            value={`${user.volume} UZS`}
             color="text-primary"
           />
           <StatCard

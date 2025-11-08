@@ -14,7 +14,7 @@ export default function InventoryPage() {
         <h1 className="text-4xl font-headline font-bold text-foreground">
           Mening inventarim
         </h1>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button variant="outline">
             <PlusCircle className="mr-2 h-4 w-4" />
             Yangi qo'shish/zarb qilish
