@@ -59,7 +59,6 @@
   "buy": "Sotib olish",
   "sell": "Sotish",
   "send": "Yuborish",
-  "auctionComingSoon": "Auksion bo'limi tez kunda ishga tushadi.",
   "totalVolume": "Umumiy hajm",
   "bought": "Sotib olingan",
   "sold": "Sotilgan",
@@ -69,5 +68,10 @@
   "earned": "Ishlab topilgan",
   "friends": "Do'stlar",
   "toNextLevel": "Keyingi darajagacha",
-  "inviteFriends": "Do'stlarni taklif qilish"
+  "inviteFriends": "Do'stlarni taklif qilish",
+  "highestBid": "Eng yuqori taklif",
+  "timeRemaining": "Qolgan vaqt",
+  "placeBid": "Narx taklif qilish",
+  "endingSoon": "Tez kunda tugaydi",
+  "noAuctionsAvailable": "Hozircha auksionlar mavjud emas."
 }

@@ -1,20 +1,53 @@
-
 'use client';
+import { useState, useEffect } from 'react';
+import { NftCard } from '@/components/nft-card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { auctionNfts, Nft } from '@/lib/data';
 import { useLanguage } from '@/context/language-context';
+import { AuctionCard } from '@/components/auction-card';
 
 export default function AuctionPage() {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
+
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-4xl font-headline font-bold text-foreground">
           {t('auction')}
         </h1>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Select defaultValue="ending-soon">
+            <SelectTrigger className="w-full sm:w-[180px] flex-1">
+              <SelectValue placeholder={t('sortBy')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ending-soon">{t('endingSoon')}</SelectItem>
+              <SelectItem value="newest">{t('newest')}</SelectItem>
+              <SelectItem value="price-high-low">{t('priceHighToLow')}</SelectItem>
+              <SelectItem value="price-low-high">{t('priceLowToHigh')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="text-center py-16">
-        <p className="text-muted-foreground">{t('auctionComingSoon')}</p>
-      </div>
+
+      {auctionNfts.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {auctionNfts.map((nft) => (
+            <AuctionCard key={nft.id} nft={nft} />
+          ))}
+        </div>
+      ) : (
+        <div className="col-span-full text-center py-16">
+          <p className="text-muted-foreground">{t('noAuctionsAvailable')}</p>
+        </div>
+      )}
     </div>
   );
 }

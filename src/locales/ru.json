@@ -59,7 +59,6 @@
   "buy": "Купить",
   "sell": "Продать",
   "send": "Отправить",
-  "auctionComingSoon": "Раздел аукционов скоро будет запущен.",
   "totalVolume": "Общий объем",
   "bought": "Куплено",
   "sold": "Продано",
@@ -69,5 +68,10 @@
   "earned": "Заработано",
   "friends": "Друзья",
   "toNextLevel": "До следующего уровня",
-  "inviteFriends": "Пригласить друзей"
+  "inviteFriends": "Пригласить друзей",
+  "highestBid": "Самая высокая ставка",
+  "timeRemaining": "Осталось времени",
+  "placeBid": "Сделать ставку",
+  "endingSoon": "Заканчивается скоро",
+  "noAuctionsAvailable": "Аукционов пока нет."
 }

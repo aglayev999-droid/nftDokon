@@ -59,7 +59,6 @@
   "buy": "Buy",
   "sell": "Sell",
   "send": "Send",
-  "auctionComingSoon": "Auction section coming soon.",
   "totalVolume": "Total Volume",
   "bought": "Bought",
   "sold": "Sold",
@@ -69,5 +68,10 @@
   "earned": "Earned",
   "friends": "Friends",
   "toNextLevel": "Until next level",
-  "inviteFriends": "Invite Friends"
+  "inviteFriends": "Invite Friends",
+  "highestBid": "Highest Bid",
+  "timeRemaining": "Time Remaining",
+  "placeBid": "Place Bid",
+  "endingSoon": "Ending Soon",
+  "noAuctionsAvailable": "No auctions available at the moment."
 }
