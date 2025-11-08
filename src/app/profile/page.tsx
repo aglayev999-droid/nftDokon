@@ -1,20 +1,7 @@
+
 import Image from 'next/image';
-import {
-  Award,
-  DollarSign,
-  Gift,
-  HeartHandshake,
-  Percent,
-  Rocket,
-  ShoppingCart,
-  Tag,
-  Users,
-} from 'lucide-react';
 import { user } from '@/lib/data';
-import { StatCard } from '@/components/profile/stat-card';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { Card } from '@/components/ui/card';
 
 export default function ProfilePage() {
   return (
@@ -35,86 +22,16 @@ export default function ProfilePage() {
             {user.username}
           </h1>
           <p className="text-muted-foreground mt-1 text-center md:text-left">
-            TON Gifter since {new Date().getFullYear()}
+            TON Gifter {new Date().getFullYear()} yildan beri
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <StatCard
-          icon={DollarSign}
-          title="Volume"
-          value={`$${user.volume.toLocaleString()}`}
-          description="Total value of trades"
-          color="text-green-400"
-        />
-        <StatCard
-          icon={ShoppingCart}
-          title="Bought"
-          value={user.bought.toString()}
-          description="NFTs purchased"
-        />
-        <StatCard
-          icon={Tag}
-          title="Sold"
-          value={user.sold.toString()}
-          description="NFTs sold"
-        />
-        <StatCard
-          icon={Percent}
-          title="Cashback Bonus"
-          value={`${user.cashbackBonus}%`}
-          description="On eligible purchases"
-          color="text-blue-400"
-        />
-        <StatCard
-          icon={Gift}
-          title="Giveaways"
-          value={user.giveaways.toString()}
-          description="Entered or won"
-        />
-        <StatCard
-          icon={Rocket}
-          title="Portals Level"
-          value={`Lv. ${user.portalsLevel}`}
-          description="Your portal mastery"
-          color="text-purple-400"
-        />
-        <StatCard
-          icon={Users}
-          title="Referrals"
-          value={user.referrals.toString()}
-          description="Friends invited"
-        />
-        <StatCard
-          icon={HeartHandshake}
-          title="Friends Volume"
-          value={`$${user.friendsVolume.toLocaleString()}`}
-          description="Volume from your referrals"
-          color="text-yellow-400"
-        />
-        
-        <Card className="lg:col-span-2 xl:col-span-4">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
-              <Award className="text-accent" />
-              Season Achievements
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {user.seasonAchievements.map((ach, index) => (
-              <div key={ach.name}>
-                {index > 0 && <Separator className="mb-6" />}
-                <div className="flex justify-between items-center mb-2">
-                  <p className="font-semibold">{ach.name}</p>
-                  <p className="text-sm font-medium text-accent">{ach.value}</p>
-                </div>
-                <Progress value={ach.progress} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+         <div className="text-center py-16">
+            <p className="text-muted-foreground">Profil hozircha bo'sh.</p>
+        </div>
+      </Card>
     </div>
   );
 }

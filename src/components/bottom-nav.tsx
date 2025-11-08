@@ -3,14 +3,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Store, LayoutGrid, User, Users, Gift } from 'lucide-react';
+import { Store, LayoutGrid, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Market', href: '/', icon: Store },
-  { name: 'Inventory', href: '/inventory', icon: LayoutGrid },
-  { name: 'Profile', href: '/profile', icon: User },
-  { name: 'Referrals', href: '/referrals', icon: Users },
+  { name: 'Bozor', href: '/', icon: Store },
+  { name: 'Inventar', href: '/inventory', icon: LayoutGrid },
+  { name: 'Profil', href: '/profile', icon: User },
+  { name: 'Takliflar', href: '/referrals', icon: Users },
 ];
 
 export default function BottomNav() {

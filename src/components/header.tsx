@@ -3,21 +3,35 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Gift, Menu, Mountain } from 'lucide-react';
-
+import { Gift, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 const navigation = [
-  { name: 'Marketplace', href: '/' },
-  { name: 'My Inventory', href: '/inventory' },
-  { name: 'Profile', href: '/profile' },
-  { name: 'Referrals', href: '/referrals' },
+  { name: 'Bozor', href: '/' },
+  { name: 'Inventarim', href: '/inventory' },
+  { name: 'Profil', href: '/profile' },
+  { name: 'Takliflar', href: '/referrals' },
 ];
+
+declare global {
+  interface Window {
+    Telegram: any;
+  }
+}
 
 export default function Header() {
   const pathname = usePathname();
+  const [isTelegram, setIsTelegram] = useState(false);
+
+  useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      setIsTelegram(true);
+      window.Telegram.WebApp.ready();
+    }
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 hidden w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:block">
@@ -26,7 +40,7 @@ export default function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Gift className="h-6 w-6 text-primary" />
             <span className="hidden font-bold sm:inline-block font-headline">
-              TON Gift Marketplace
+              TON Sovg'a Bozori
             </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -50,7 +64,7 @@ export default function Header() {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              aria-label="Open navigation"
+              aria-label="Navigatsiyani ochish"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -58,7 +72,7 @@ export default function Header() {
           <SheetContent side="left">
             <Link href="/" className="flex items-center">
               <Gift className="h-6 w-6 text-primary" />
-              <span className="ml-2 font-bold font-headline">TON Gifts</span>
+              <span className="ml-2 font-bold font-headline">TON Sovg'alari</span>
             </Link>
             <div className="mt-8 flex flex-col space-y-4">
               {navigation.map((item) => (
@@ -77,8 +91,8 @@ export default function Header() {
           </SheetContent>
         </Sheet>
         <div className="flex flex-1 items-center justify-end space-x-4">
-          <Button className="bg-primary/80 hover:bg-primary text-primary-foreground font-bold">
-            Connect Wallet
+          <Button className="font-bold">
+             {isTelegram ? 'Ulandi' : 'Hamyonni ulash'}
           </Button>
         </div>
       </div>

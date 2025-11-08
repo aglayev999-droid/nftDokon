@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import type { Nft } from '@/lib/data';
 import { Button } from './ui/button';
@@ -17,7 +18,7 @@ interface NftCardProps {
 
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   return (
-    <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
+    <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
         <div className="relative aspect-square">
           <Image
@@ -42,11 +43,11 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         {action === 'buy' ? (
-          <Button className="w-full font-bold bg-primary hover:bg-primary/90 text-primary-foreground">Buy Now</Button>
+          <Button className="w-full font-bold">Sotib olish</Button>
         ) : (
           <div className="w-full grid grid-cols-2 gap-2">
-            <Button variant="outline" className="w-full">Sell</Button>
-            <Button variant="outline" className="w-full">Send</Button>
+            <Button variant="outline" className="w-full">Sotish</Button>
+            <Button variant="outline" className="w-full">Yuborish</Button>
           </div>
         )}
       </CardFooter>

@@ -1,3 +1,4 @@
+
 import { Gift } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
@@ -23,11 +24,11 @@ export default function Footer() {
           <div className="flex items-center space-x-2">
             <Gift className="h-6 w-6 text-primary" />
             <span className="font-bold text-lg font-headline">
-              TON Gift Marketplace
+              TON Sovg'a Bozori
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} TON Gifts. All rights reserved.
+            &copy; {new Date().getFullYear()} TON Gifts. Barcha huquqlar himoyalangan.
           </p>
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="icon" asChild>

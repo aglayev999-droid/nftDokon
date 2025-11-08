@@ -7,8 +7,8 @@ import Footer from '@/components/footer';
 import BottomNav from '@/components/bottom-nav';
 
 export const metadata: Metadata = {
-  title: 'TON Gift Marketplace',
-  description: 'Find, trade and collect unique digital gifts in our marketplace.',
+  title: 'TON Sovgʻa Bozor',
+  description: 'Bozorimizda noyob raqamli sovgʻalarni toping, ayirboshlang va toʻplang.',
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="uz" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
