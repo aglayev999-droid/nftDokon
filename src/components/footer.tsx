@@ -28,7 +28,7 @@ export default function Footer() {
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} NFT kerak. Barcha huquqlar himoyalangan.
+            &copy; {new Date().getFullYear()} NFT kerak.
           </p>
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="icon" asChild>
