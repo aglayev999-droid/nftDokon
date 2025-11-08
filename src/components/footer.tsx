@@ -24,11 +24,11 @@ export default function Footer() {
           <div className="flex items-center space-x-2">
             <Gift className="h-6 w-6 text-primary" />
             <span className="font-bold text-lg font-headline">
-              TON Sovg'a Bozori
+              NFT kerak
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} TON Gifts. Barcha huquqlar himoyalangan.
+            &copy; {new Date().getFullYear()} NFT kerak. Barcha huquqlar himoyalangan.
           </p>
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="icon" asChild>

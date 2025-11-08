@@ -7,8 +7,8 @@ import Footer from '@/components/footer';
 import BottomNav from '@/components/bottom-nav';
 
 export const metadata: Metadata = {
-  title: 'TON Sovgʻa Bozor',
-  description: 'Bozorimizda noyob raqamli sovgʻalarni toping, ayirboshlang va toʻplang.',
+  title: 'NFT kerak',
+  description: 'O\'zbekistondagi eng yaxshi NFT bozori. Noyob raqamli sovg\'alarni toping, ayirboshlang va to\'plang.',
 };
 
 export default function RootLayout({

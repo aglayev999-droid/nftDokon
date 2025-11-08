@@ -12,8 +12,8 @@ import { useEffect, useState } from 'react';
 const navigation = [
   { name: 'Bozor', href: '/' },
   { name: 'Inventarim', href: '/inventory' },
+  { name: 'Auksion', href: '/auction' },
   { name: 'Profil', href: '/profile' },
-  { name: 'Takliflar', href: '/referrals' },
 ];
 
 declare global {
@@ -40,7 +40,7 @@ export default function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Gift className="h-6 w-6 text-primary" />
             <span className="hidden font-bold sm:inline-block font-headline">
-              TON Sovg'a Bozori
+              NFT kerak
             </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -72,7 +72,7 @@ export default function Header() {
           <SheetContent side="left">
             <Link href="/" className="flex items-center">
               <Gift className="h-6 w-6 text-primary" />
-              <span className="ml-2 font-bold font-headline">TON Sovg'alari</span>
+              <span className="ml-2 font-bold font-headline">NFT kerak</span>
             </Link>
             <div className="mt-8 flex flex-col space-y-4">
               {navigation.map((item) => (
