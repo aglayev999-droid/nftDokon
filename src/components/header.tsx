@@ -3,11 +3,26 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Gift, Menu, Plus } from 'lucide-react';
+import { Gift, Menu, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const navigation = [
   { name: 'Bozor', href: '/' },
@@ -25,13 +40,24 @@ declare global {
 export default function Header() {
   const pathname = usePathname();
   const [isTelegram, setIsTelegram] = useState(false);
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
       setIsTelegram(true);
       window.Telegram.WebApp.ready();
     }
+    const storedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(storedTheme);
+    document.documentElement.className = storedTheme;
   }, []);
+
+  const handleThemeChange = (value: string) => {
+    setTheme(value);
+    localStorage.setItem('theme', value);
+    document.documentElement.className = value;
+  };
+
 
   return (
     <header className="sticky top-0 z-50 hidden w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:block">
@@ -90,7 +116,7 @@ export default function Header() {
             </div>
           </SheetContent>
         </Sheet>
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex flex-1 items-center justify-end space-x-2">
            <Button variant="outline" className="font-semibold">
               0 UZS
               <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/20 text-primary ml-2">
@@ -100,6 +126,45 @@ export default function Header() {
           <Button className="font-bold">
              {isTelegram ? 'Ulandi' : 'Hamyonni ulash'}
           </Button>
+           <Dialog>
+              <DialogTrigger asChild>
+                 <Button variant="ghost" size="icon">
+                    <Settings className="h-5 w-5" />
+                 </Button>
+              </DialogTrigger>
+              <DialogContent>
+                 <DialogHeader>
+                    <DialogTitle>Sozlamalar</DialogTitle>
+                 </DialogHeader>
+                 <div className="space-y-4">
+                    <div className="space-y-2">
+                       <Label htmlFor="language">Til</Label>
+                       <Select defaultValue="uz">
+                          <SelectTrigger id="language">
+                             <SelectValue placeholder="Tilni tanlang" />
+                          </SelectTrigger>
+                          <SelectContent>
+                             <SelectItem value="uz">O'zbek</SelectItem>
+                             <SelectItem value="ru">Русский</SelectItem>
+                             <SelectItem value="en">English</SelectItem>
+                          </SelectContent>
+                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                       <Label htmlFor="theme">Mavzu</Label>
+                       <Select value={theme} onValueChange={handleThemeChange}>
+                          <SelectTrigger id="theme">
+                             <SelectValue placeholder="Mavzuni tanlang" />
+                          </SelectTrigger>
+                          <SelectContent>
+                             <SelectItem value="light">Yorug'</SelectItem>
+                             <SelectItem value="dark">Qorong'u</SelectItem>
+                          </SelectContent>
+                       </Select>
+                    </div>
+                 </div>
+              </DialogContent>
+           </Dialog>
         </div>
       </div>
     </header>
