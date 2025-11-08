@@ -1,21 +1,29 @@
 
+'use client';
+import { useState, useEffect } from 'react';
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import BottomNav from '@/components/bottom-nav';
-
-export const metadata: Metadata = {
-  title: 'NFT kerak',
-  description: 'O\'zbekistondagi eng yaxshi NFT bozori. Noyob raqamli sovg\'alarni toping, ayirboshlang va to\'plang.',
-};
+import LoadingScreen from '@/components/loading-screen';
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000); 
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <html lang="uz">
       <head>
@@ -31,11 +39,17 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow pb-16 md:pb-0">{children}</main>
-        <Footer />
-        <Toaster />
-        <BottomNav />
+        {loading ? (
+          <LoadingScreen />
+        ) : (
+          <>
+            <Header />
+            <main className="flex-grow pb-16 md:pb-0">{children}</main>
+            <Footer />
+            <Toaster />
+            <BottomNav />
+          </>
+        )}
       </body>
     </html>
   );
