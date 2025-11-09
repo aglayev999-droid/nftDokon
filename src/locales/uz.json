@@ -73,5 +73,12 @@
   "timeRemaining": "Qolgan vaqt",
   "placeBid": "Narx taklif qilish",
   "endingSoon": "Tez kunda tugaydi",
-  "noAuctionsAvailable": "Hozircha auksionlar mavjud emas."
+  "noAuctionsAvailable": "Hozircha auksionlar mavjud emas.",
+  "watch": "Kuzatish",
+  "status": "Holat",
+  "share": "Ulashish",
+  "collection": "To'plam",
+  "commissionPeriod": "0% komissiya davri",
+  "makeAnOffer": "Taklif qilish",
+  "buyGift": "Sovg'ani {price} UZS ga sotib olish"
 }

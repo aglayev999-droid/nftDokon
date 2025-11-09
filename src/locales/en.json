@@ -73,5 +73,12 @@
   "timeRemaining": "Time Remaining",
   "placeBid": "Place Bid",
   "endingSoon": "Ending Soon",
-  "noAuctionsAvailable": "No auctions available at the moment."
+  "noAuctionsAvailable": "No auctions available at the moment.",
+  "watch": "Watch",
+  "status": "Status",
+  "share": "Share",
+  "collection": "Collection",
+  "commissionPeriod": "0% commission period",
+  "makeAnOffer": "Make an offer",
+  "buyGift": "Buy gift {price} UZS"
 }

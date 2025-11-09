@@ -1,4 +1,5 @@
 
+'use client';
 import Image from 'next/image';
 import type { Nft } from '@/lib/data';
 import { Button } from './ui/button';
@@ -11,6 +12,12 @@ import {
 } from './ui/card';
 import { Tag } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { NftDetailDialog } from './nft-detail-dialog';
 
 interface NftCardProps {
   nft: Nft;
@@ -20,8 +27,9 @@ interface NftCardProps {
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
-  return (
-    <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
+
+  const cardContent = (
+     <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
         <div className="relative aspect-square">
           <Image
@@ -55,5 +63,20 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         )}
       </CardFooter>
     </Card>
+  );
+
+  if (action === 'manage') {
+    return cardContent;
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        {cardContent}
+      </DialogTrigger>
+      <DialogContent className="max-w-md p-0">
+        <NftDetailDialog nft={nft} />
+      </DialogContent>
+    </Dialog>
   );
 }

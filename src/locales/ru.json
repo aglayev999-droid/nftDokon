@@ -73,5 +73,12 @@
   "timeRemaining": "Осталось времени",
   "placeBid": "Сделать ставку",
   "endingSoon": "Заканчивается скоро",
-  "noAuctionsAvailable": "Аукционов пока нет."
+  "noAuctionsAvailable": "Аукционов пока нет.",
+  "watch": "Следить",
+  "status": "Статус",
+  "share": "Поделиться",
+  "collection": "Коллекция",
+  "commissionPeriod": "0% комиссионный период",
+  "makeAnOffer": "Предложить цену",
+  "buyGift": "Купить подарок {price} UZS"
 }
