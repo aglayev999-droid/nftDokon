@@ -82,5 +82,19 @@
   "makeAnOffer": "Taklif qilish",
   "buyGift": "Sovg'ani {price} UZS ga sotib olish",
   "shareNftText": "'{nftName}' NFTsi {price} UZS ga sotilmoqda! Ko'rib chiqing:",
-  "shareNotSupported": "Ulashish bu qurilmada qo'llab-quvvatlanmaydi."
+  "shareNotSupported": "Ulashish bu qurilmada qo'llab-quvvatlanmaydi.",
+  "walletNotConnected": "Hamyon ulanmagan",
+  "connect": "Ulangan",
+  "walletBalance": "Hamyon balansi",
+  "deposit": "Hisobni to'ldirish",
+  "withdraw": "Yechib olish",
+  "recentActions": "Oxirgi amallar",
+  "noRecentActions": "Ko'rsatish uchun oxirgi amallar yo'q.",
+  "filter": "Filtr",
+  "connectYourCard": "Kartangizni ulang",
+  "connectCardDescription": "Hamyonni ulash uchun Humo yoki Uzcard ma'lumotlaringizni kiriting.",
+  "cardNumber": "Karta raqami",
+  "cardExpiry": "Amal qilish muddati (OO/YY)",
+  "connectCard": "Kartani ulash",
+  "wallet": "Hamyon"
 }

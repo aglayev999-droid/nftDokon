@@ -82,5 +82,19 @@
   "makeAnOffer": "Предложить цену",
   "buyGift": "Купить подарок {price} UZS",
   "shareNftText": "NFT '{nftName}' продается за {price} UZS! Посмотрите:",
-  "shareNotSupported": "Поделиться не поддерживается на этом устройстве."
+  "shareNotSupported": "Поделиться не поддерживается на этом устройстве.",
+  "walletNotConnected": "Кошелек не подключен",
+  "connect": "Подключить",
+  "walletBalance": "Баланс кошелька",
+  "deposit": "Пополнить",
+  "withdraw": "Вывести",
+  "recentActions": "Последние действия",
+  "noRecentActions": "Нет недавних действий для отображения.",
+  "filter": "Фильтр",
+  "connectYourCard": "Подключите вашу карту",
+  "connectCardDescription": "Введите данные вашей карты Humo или Uzcard для подключения кошелька.",
+  "cardNumber": "Номер карты",
+  "cardExpiry": "Срок действия (ММ/ГГ)",
+  "connectCard": "Подключить карту",
+  "wallet": "Кошелек"
 }

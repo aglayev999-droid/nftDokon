@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -30,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/context/language-context';
+import { WalletDialog } from './wallet-dialog';
 
 declare global {
   interface Window {
@@ -136,12 +136,20 @@ export default function Header() {
             </Sheet>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
-           <Button variant="outline" className="font-semibold">
-              0 UZS
-              <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/20 text-primary ml-2">
-                  <Plus className="h-4 w-4" />
-              </div>
-            </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="font-semibold">
+                0 UZS
+                <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/20 text-primary ml-2">
+                    <Plus className="h-4 w-4" />
+                </div>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="p-0 max-w-sm">
+                <WalletDialog />
+            </DialogContent>
+          </Dialog>
+
           <Button className="font-bold hidden sm:flex">
              {isTelegram ? t('connected') : t('connectWallet')}
           </Button>

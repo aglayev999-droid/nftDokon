@@ -82,5 +82,19 @@
   "makeAnOffer": "Make an offer",
   "buyGift": "Buy gift {price} UZS",
   "shareNftText": "The NFT '{nftName}' is for sale for {price} UZS! Check it out:",
-  "shareNotSupported": "Sharing is not supported on this device."
+  "shareNotSupported": "Sharing is not supported on this device.",
+  "walletNotConnected": "Wallet not connected",
+  "connect": "Connect",
+  "walletBalance": "Wallet balance",
+  "deposit": "Deposit",
+  "withdraw": "Withdraw",
+  "recentActions": "Recent Actions",
+  "noRecentActions": "No recent actions to display.",
+  "filter": "Filter",
+  "connectYourCard": "Connect your card",
+  "connectCardDescription": "Enter your Humo or Uzcard details to connect your wallet.",
+  "cardNumber": "Card Number",
+  "cardExpiry": "Expiry (MM/YY)",
+  "connectCard": "Connect Card",
+  "wallet": "Wallet"
 }
