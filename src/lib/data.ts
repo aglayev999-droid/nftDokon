@@ -118,6 +118,18 @@ export const nftsData: Nft[] = [
     imageHint: 'crystal gift',
     isListed: true,
   },
+  {
+    id: 'moon-pendant-2075',
+    name: 'Moon Pendant',
+    price: 250000,
+    rarity: 'Legendary',
+    collection: 'TON Treasures',
+    model: 'Epic',
+    background: 'Space',
+    imageUrl: 'https://nft.fragment.com/gift/MoonPendant-2075.jpg',
+    imageHint: 'moon pendant',
+    isListed: true,
+  }
 ];
 
 export const auctionNfts: Nft[] = [
