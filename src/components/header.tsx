@@ -32,16 +32,11 @@ import {
 import { useLanguage } from '@/context/language-context';
 import { WalletDialog } from './wallet-dialog';
 import { useWallet } from '@/context/wallet-context';
-
-declare global {
-  interface Window {
-    Telegram: any;
-  }
-}
+import { useTelegramUser } from '@/context/telegram-user-context';
 
 export default function Header() {
   const pathname = usePathname();
-  const [isTelegram, setIsTelegram] = useState(false);
+  const { isTelegram } = useTelegramUser();
   const { language, setLanguage, translations } = useLanguage();
   const { balance } = useWallet();
   const [theme, setTheme] = useState('dark');
@@ -63,10 +58,6 @@ export default function Header() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (window.Telegram && window.Telegram.WebApp) {
-        setIsTelegram(true);
-        window.Telegram.WebApp.ready();
-      }
       const storedTheme = localStorage.getItem('theme') || 'dark';
       setTheme(storedTheme);
       document.documentElement.className = storedTheme;

@@ -30,8 +30,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { user } from '@/lib/data';
 import { useWallet } from '@/context/wallet-context';
+import { useTelegramUser } from '@/context/telegram-user-context';
 
 export function WalletDialog() {
   const { translations } = useLanguage();
@@ -46,6 +46,7 @@ export function WalletDialog() {
   };
   const { toast } = useToast();
   const { balance, setBalance } = useWallet();
+  const { user: telegramUser } = useTelegramUser();
 
   const recentActions: any[] = [];
   
@@ -71,7 +72,7 @@ export function WalletDialog() {
 
   const handleDepositProceed = () => {
     const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) {
+    if (!amount || amount <= 0 || !telegramUser) {
       toast({
         variant: "destructive",
         title: t('error'),
@@ -87,7 +88,7 @@ export function WalletDialog() {
       card: `8600 **** **** ${fullCardNumber.slice(-4)}`,
       cardFull: fullCardNumber,
       cardName: 'R/B',
-      username: user.username,
+      username: telegramUser.username || telegramUser.first_name,
     });
   };
   

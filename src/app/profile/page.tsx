@@ -1,37 +1,83 @@
 
 'use client';
 import Image from 'next/image';
-import { user } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Diamond, Gift, HandCoins, Users } from 'lucide-react';
+import { Diamond, Gift, HandCoins, Users, User as UserIcon } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { useTelegramUser } from '@/context/telegram-user-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfilePage() {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
+  const { user: telegramUser, isLoading } = useTelegramUser();
 
-  const referralLink = `https://nftkerak.com/join?ref=${user.username}`;
+  const referralLink = `https://nftkerak.com/join?ref=${telegramUser?.username || telegramUser?.id}`;
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
-    // You can add a toast notification here
+    // You can add a toast notification here to confirm copy
   };
+
+  if (isLoading || !telegramUser) {
+    return (
+      <div className="container mx-auto max-w-2xl py-8 px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="w-24 h-24 rounded-full" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  const user = { // Dummy data for now, will be replaced with real data from Firestore
+    volume: 0,
+    bought: 0,
+    sold: 0,
+    portalsLevel: 0,
+    referrals: 0,
+    friendsVolume: 0,
+  };
+
+  const displayName = telegramUser.last_name 
+    ? `${telegramUser.first_name} ${telegramUser.last_name}`
+    : telegramUser.first_name;
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center gap-4 mb-8">
         <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-green-400 flex items-center justify-center">
-             <span className="text-4xl font-bold text-white">
-               {user.username.charAt(0).toUpperCase()}
-             </span>
-          </div>
+          {telegramUser.photo_url ? (
+            <Image
+              src={telegramUser.photo_url}
+              alt={displayName}
+              width={96}
+              height={96}
+              className="w-24 h-24 rounded-full border-2 border-primary"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-4xl font-bold text-primary-foreground">
+                {telegramUser.first_name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
         </div>
         <h1 className="text-2xl font-bold font-headline text-center">
-          {user.username}
+          {displayName}
         </h1>
+        {telegramUser.username && (
+            <p className="text-muted-foreground">@{telegramUser.username}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4 text-center mb-8">
