@@ -1,7 +1,7 @@
 
 'use client';
 
-import Lottie from 'lottie-react';
+import Lottie, { useLottie } from 'lottie-react';
 import { Skeleton } from './ui/skeleton';
 
 interface LottiePlayerProps {
@@ -9,16 +9,23 @@ interface LottiePlayerProps {
 }
 
 export function LottiePlayer({ src }: LottiePlayerProps) {
+  const { View, animationData } = useLottie({
+    animationData: null, // Initially null
+    loop: true,
+    autoplay: true,
+    path: src, // Load animation from URL
+  }, {
+    height: '100%',
+    width: '100%',
+  });
+
+  if (!animationData) {
+    return <Skeleton className="aspect-square w-full rounded-none" />;
+  }
+
   return (
     <div className="aspect-square w-full">
-      <Lottie
-        animationData={src}
-        loop={true}
-        className="h-full w-full"
-        rendererSettings={{
-          preserveAspectRatio: 'xMidYMid slice',
-        }}
-      />
+      {View}
     </div>
   );
 }
