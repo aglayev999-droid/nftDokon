@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -22,6 +21,35 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
         });
     }
     return translation;
+  };
+
+  const handleWatch = () => {
+    // Creates a PascalCase version of the ID, e.g., "ice-cream-1" -> "IceCream-1"
+    const nftLinkID = nft.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+    const url = `https://t.me/nft/${nftLinkID}`;
+    window.open(url, '_blank');
+  };
+  
+  const handleStatus = () => {
+    const status = nft.isListed ? t('listed') : t('unlisted');
+    alert(`${t('status')}: ${status}`);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: nft.name,
+      text: t('shareNftText', {nftName: nft.name, price: nft.price}),
+      url: window.location.href, // Or a direct link to the NFT if available
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        alert(t('shareNotSupported'));
+      }
+    } catch (err) {
+      console.error('Share failed:', err);
+    }
   };
 
   const detailRow = (label: string, value: string) => (
@@ -49,15 +77,15 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
-             <Button variant="secondary" size="lg" className="flex-col h-auto py-2">
+             <Button onClick={handleWatch} variant="secondary" size="lg" className="flex-col h-auto py-2">
                  <Send className="w-5 h-5 mb-1" />
                  <span className="text-xs">{t('watch')}</span>
              </Button>
-             <Button variant="secondary" size="lg" className="flex-col h-auto py-2">
+             <Button onClick={handleStatus} variant="secondary" size="lg" className="flex-col h-auto py-2">
                  <BarChart className="w-5 h-5 mb-1" />
                  <span className="text-xs">{t('status')}</span>
              </Button>
-             <Button variant="secondary" size="lg" className="flex-col h-auto py-2">
+             <Button onClick={handleShare} variant="secondary" size="lg" className="flex-col h-auto py-2">
                  <Share2 className="w-5 h-5 mb-1" />
                  <span className="text-xs">{t('share')}</span>
              </Button>
@@ -81,7 +109,7 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
 
         <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" size="lg">{t('makeAnOffer')}</Button>
-            <Button size="lg" className="font-bold">{t('buyGift', { price: nft.price })}</Button>
+            <Button size="lg" className="font-bold">{t('buy')}</Button>
         </div>
       </div>
     </div>

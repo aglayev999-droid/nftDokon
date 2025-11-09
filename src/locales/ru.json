@@ -80,5 +80,7 @@
   "collection": "Коллекция",
   "commissionPeriod": "0% комиссионный период",
   "makeAnOffer": "Предложить цену",
-  "buyGift": "Купить подарок {price} UZS"
+  "buyGift": "Купить подарок {price} UZS",
+  "shareNftText": "NFT '{nftName}' продается за {price} UZS! Посмотрите:",
+  "shareNotSupported": "Поделиться не поддерживается на этом устройстве."
 }

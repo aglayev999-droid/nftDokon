@@ -50,7 +50,7 @@
   "withdrawNSelected": "Withdraw {count} NFT(s)",
   "all": "All",
   "listed": "Listed",
-  "unlisted": "Unlisted",
+  "unlisted": "Not listed",
   "inventoryEmpty": "Your inventory is empty.",
   "noListedNfts": "You have no listed NFTs.",
   "noUnlistedNfts": "You have no unlisted NFTs.",
@@ -80,5 +80,7 @@
   "collection": "Collection",
   "commissionPeriod": "0% commission period",
   "makeAnOffer": "Make an offer",
-  "buyGift": "Buy gift {price} UZS"
+  "buyGift": "Buy gift {price} UZS",
+  "shareNftText": "The NFT '{nftName}' is for sale for {price} UZS! Check it out:",
+  "shareNotSupported": "Sharing is not supported on this device."
 }

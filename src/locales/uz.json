@@ -49,8 +49,8 @@
   "selectNftsToWithdraw": "Yechib olmoqchi bo'lgan NFTlaringizni tanlang.",
   "withdrawNSelected": "{count} ta NFT yechish",
   "all": "Barchasi",
-  "listed": "Ro'yxatda",
-  "unlisted": "Ro'yxatdan tashqari",
+  "listed": "Sotuvda",
+  "unlisted": "Sotuvda emas",
   "inventoryEmpty": "Sizning inventaringiz bo'sh.",
   "noListedNfts": "Sizda ro'yxatga olingan NFTlar yo'q.",
   "noUnlistedNfts": "Sizda ro'yxatdan o'tmagan NFTlar yo'q.",
@@ -80,5 +80,7 @@
   "collection": "To'plam",
   "commissionPeriod": "0% komissiya davri",
   "makeAnOffer": "Taklif qilish",
-  "buyGift": "Sovg'ani {price} UZS ga sotib olish"
+  "buyGift": "Sovg'ani {price} UZS ga sotib olish",
+  "shareNftText": "'{nftName}' NFTsi {price} UZS ga sotilmoqda! Ko'rib chiqing:",
+  "shareNotSupported": "Ulashish bu qurilmada qo'llab-quvvatlanmaydi."
 }

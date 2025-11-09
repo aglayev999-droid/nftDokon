@@ -1,4 +1,3 @@
-
 'use client';
 import Image from 'next/image';
 import type { Nft } from '@/lib/data';
@@ -48,7 +47,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         <CardTitle className="text-xl font-headline truncate">{nft.name}</CardTitle>
         <div className="flex items-center gap-2 text-primary font-bold text-2xl">
           <Tag className="w-5 h-5 text-accent" />
-          <span>{nft.price}</span>
+          <span>{nft.price.toLocaleString()}</span>
           <span className="text-sm text-muted-foreground font-normal">UZS</span>
         </div>
       </CardContent>
