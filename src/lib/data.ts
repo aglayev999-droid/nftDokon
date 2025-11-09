@@ -45,7 +45,7 @@ const getImage = (id: string) => {
   };
 };
 
-export const nfts: Nft[] = [
+export const nftsData: Nft[] = [
   {
     id: 'ice-cream-1',
     name: 'Ice Cream 1',
@@ -80,6 +80,42 @@ export const nfts: Nft[] = [
     background: 'Holographic',
     imageUrl: 'https://nft.fragment.com/gift/icecream-3.medium.jpg',
     imageHint: 'ice cream sundae',
+    isListed: true,
+  },
+    {
+    id: 'gift-1',
+    name: 'Gift 1',
+    price: 25000,
+    rarity: 'Common',
+    collection: 'Pixel Presents',
+    model: 'Common',
+    background: 'Neon',
+    imageUrl: 'https://nft.fragment.com/gift/gift-1.medium.jpg',
+    imageHint: 'gift box',
+    isListed: true,
+  },
+  {
+    id: 'gift-2',
+    name: 'Gift 2',
+    price: 0,
+    rarity: 'Rare',
+    collection: 'Pixel Presents',
+    model: 'Rare',
+    background: 'Space',
+    imageUrl: 'https://nft.fragment.com/gift/gift-2.medium.jpg',
+    imageHint: 'glowing gift',
+    isListed: false,
+  },
+  {
+    id: 'gift-3',
+    name: 'Gift 3',
+    price: 175000,
+    rarity: 'Epic',
+    collection: 'Pixel Presents',
+    model: 'Epic',
+    background: 'Holographic',
+    imageUrl: 'https://nft.fragment.com/gift/gift-3.medium.jpg',
+    imageHint: 'crystal gift',
     isListed: true,
   },
 ];

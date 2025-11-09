@@ -36,10 +36,11 @@ import {
 } from '@/components/ui/sheet';
 import { useLanguage } from '@/context/language-context';
 import { NftCard } from '@/components/nft-card';
-import { nfts } from '@/lib/data';
+import { useNft } from '@/context/nft-context';
 
 export default function MarketplacePage() {
   const { translations } = useLanguage();
+  const { nfts } = useNft();
   const listedNfts = nfts.filter((nft) => nft.isListed);
 
   const t = (key: string) => {

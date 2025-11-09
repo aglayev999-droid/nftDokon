@@ -9,12 +9,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { NftCard } from '@/components/nft-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { nfts as allNfts, Nft } from '@/lib/data';
+import { Nft } from '@/lib/data';
 import { PlusCircle, Upload, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/context/language-context';
@@ -28,9 +27,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useNft } from '@/context/nft-context';
 
 export default function InventoryPage() {
-  const [nfts, setNfts] = useState<Nft[]>(allNfts);
+  const { nfts } = useNft();
   const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
   const { translations } = useLanguage();
 
@@ -142,14 +142,20 @@ export default function InventoryPage() {
               </div>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button
-                    disabled={selectedNfts.size === 0}
-                    onClick={handleWithdraw}
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    {t('withdrawNSelected', { count: selectedNfts.size })}
+                   <Button
+                    variant="outline"
+                    onClick={() => setSelectedNfts(new Set())}
+                    >
+                    {t('cancel')}
                   </Button>
                 </DialogClose>
+                <Button
+                  disabled={selectedNfts.size === 0}
+                  onClick={handleWithdraw}
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  {t('withdrawNSelected', { count: selectedNfts.size })}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
