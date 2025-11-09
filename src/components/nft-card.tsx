@@ -1,4 +1,3 @@
-
 'use client';
 import Image from 'next/image';
 import type { Nft, User } from '@/lib/data';
@@ -18,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { NftDetailDialog } from './nft-detail-dialog';
 import {
@@ -37,8 +37,8 @@ import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
 import { LottiePlayer } from './lottie-player';
-import { DialogDescription, DialogFooter as NftDialogFooter } from './ui/dialog';
-import { user } from '@/lib/data';
+import { DialogDescription } from './ui/dialog';
+import { useUser } from '@/firebase';
 
 
 interface NftCardProps {
@@ -46,16 +46,13 @@ interface NftCardProps {
   action?: 'buy' | 'manage';
 }
 
-// Hozircha test uchun joriy foydalanuvchini shu yerdan olib turamiz
-const currentUser: User = user;
-
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const { translations } = useLanguage();
-  const { setNfts } = useNft();
+  const { setNftStatus } = useNft();
+  const { user: currentUser } = useUser();
   const { toast } = useToast();
   const [price, setPrice] = useState('');
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
-  const [isUnlistAlertOpen, setIsUnlistAlertOpen] = useState(false);
 
   const t = (key: string, params?: { [key: string]: any }) => {
     let translation = translations[key] || key;
@@ -78,11 +75,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       return;
     }
     
-    setNfts(prevNfts => 
-      prevNfts.map(n => 
-        n.id === nft.id ? { ...n, isListed: true, price: sellPrice } : n
-      )
-    );
+    setNftStatus(nft.id, true, sellPrice);
 
     toast({
       title: t('listForSaleSuccessTitle'),
@@ -93,20 +86,15 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   };
 
   const handleUnlist = () => {
-    setNfts(prevNfts => 
-      prevNfts.map(n => 
-        n.id === nft.id ? { ...n, isListed: false, price: 0 } : n
-      )
-    );
+    setNftStatus(nft.id, false);
 
     toast({
       title: t('unlistSuccessTitle'),
       description: t('unlistSuccessDescription', { nftName: nft.name }),
     });
-    setIsUnlistAlertOpen(false);
   };
   
-  const isOwner = nft.ownerId === currentUser.id;
+  const isOwner = currentUser && nft.ownerId === currentUser.uid;
   const nftIdNumber = nft.id.split('-').pop();
 
   const buyActions = (
@@ -122,7 +110,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const manageActions = (
     <div className="w-full grid grid-cols-2 gap-2">
       {nft.isListed ? (
-        <AlertDialog open={isUnlistAlertOpen} onOpenChange={setIsUnlistAlertOpen}>
+        <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" className="w-full">{t('unlist')}</Button>
           </AlertDialogTrigger>
@@ -159,9 +147,9 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
                 onChange={(e) => setPrice(e.target.value)}
               />
             </div>
-            <NftDialogFooter>
-              <Button onClick={handleSell}>{t('listForSale')}</Button>
-            </NftDialogFooter>
+            <DialogFooter>
+                <Button onClick={handleSell}>{t('listForSale')}</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

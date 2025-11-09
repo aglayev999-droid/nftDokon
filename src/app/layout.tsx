@@ -31,8 +31,8 @@ export default function RootLayout({
   return (
     <LanguageProvider>
       <WalletProvider>
-        <NftProvider>
-          <FirebaseClientProvider>
+        <FirebaseClientProvider>
+          <NftProvider>
             <html lang="uz">
               <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -60,8 +60,8 @@ export default function RootLayout({
                 )}
               </body>
             </html>
-          </FirebaseClientProvider>
-        </NftProvider>
+          </NftProvider>
+        </FirebaseClientProvider>
       </WalletProvider>
     </LanguageProvider>
   );
