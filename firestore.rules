@@ -17,20 +17,17 @@ service cloud.firestore {
     match /users/{userId} {
       // Allow user to read their own document.
       allow get: if isOwner(userId);
-      // Allow any signed-in user to update a user document (for balance transfers).
-      // In a real app, this would be much stricter, likely handled by Cloud Functions.
-      allow update: if isSignedIn();
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      // Allow a user to create their own document
+      allow create: if isOwner(userId);
+      // Balance updates are handled by a secure backend now (API route), 
+      // so client-side updates are no longer needed.
+      allow update: if isOwner(userId);
       allow list, delete: if false;
 
       // /users/{userId}/inventory/{nftId}
       match /inventory/{nftId} {
-        // Allow owner to read and create/update their own NFTs.
-        allow read, create, update: if isOwner(userId);
-        // Allow any signed-in user to delete an NFT from another's inventory.
-        // This is necessary for the client-side 'buyNft' transaction to work.
-        // A more secure implementation would use a Cloud Function.
-        allow delete: if isSignedIn();
+        // A user can fully manage their own inventory
+        allow read, create, update, delete: if isOwner(userId);
       }
     }
     

@@ -40,7 +40,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const { user: telegramUser, isLoading: isTelegramUserLoading } = useTelegramUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { setBalance } = useWallet();
+  const { balance, setBalance } = useWallet();
 
   const userId = firebaseUser?.uid;
 
@@ -180,8 +180,8 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
-  const buyNft = (nft: Nft) => {
-    if (!userId || !firestore || !nft.ownerId) {
+  const buyNft = async (nft: Nft) => {
+    if (!userId || !nft.ownerId) {
         toast({ variant: "destructive", title: "Cannot complete purchase.", description: "You must be logged in and the NFT must have an owner."});
         return;
     }
@@ -189,54 +189,43 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
         toast({ variant: "destructive", title: "Cannot buy your own NFT."});
         return;
     }
+    if (balance < nft.price) {
+        toast({ variant: "destructive", title: "Insufficient funds.", description: "You do not have enough balance to buy this NFT."});
+        return;
+    }
 
-    const sellerRef = doc(firestore, "users", nft.ownerId!);
-    const buyerRef = doc(firestore, "users", userId);
-    const originalNftRef = doc(firestore, "users", nft.ownerId!, "inventory", nft.id);
+    try {
+      const response = await fetch('/api/buy-nft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          nftId: nft.id,
+          sellerId: nft.ownerId,
+          buyerId: userId 
+        }),
+      });
 
-    runTransaction(firestore, async (transaction) => {
-        const [sellerDoc, buyerDoc, originalNftDoc] = await Promise.all([
-            transaction.get(sellerRef),
-            transaction.get(buyerRef),
-            transaction.get(originalNftRef)
-        ]);
+      const result = await response.json();
 
-        if (!sellerDoc.exists()) throw new Error("Seller account not found.");
-        if (!buyerDoc.exists()) throw new Error("Buyer account not found.");
-        if (!originalNftDoc.exists()) throw new Error("The NFT is no longer available from this seller.");
+      if (!response.ok) {
+        throw new Error(result.error || 'An unknown error occurred.');
+      }
+      
+      // Optimistically update the client-side balance
+      setBalance(prev => prev - nft.price);
 
-        const sellerData = sellerDoc.data() as UserAccount;
-        const buyerData = buyerDoc.data() as UserAccount;
-        const nftDataFromInventory = originalNftDoc.data() as Nft;
-        
-        if (buyerData.balance < nftDataFromInventory.price) throw new Error("Insufficient funds.");
-
-        // Transfer money
-        transaction.update(buyerRef, { balance: buyerData.balance - nftDataFromInventory.price });
-        transaction.update(sellerRef, { balance: sellerData.balance + nftDataFromInventory.price });
-
-        // Transfer NFT
-        const newNftData = { ...nftDataFromInventory, ownerId: userId, isListed: false };
-        const newNftRef = doc(firestore, "users", userId, "inventory", nft.id);
-        transaction.delete(originalNftRef);
-        transaction.set(newNftRef, newNftData);
-    })
-    .then(() => {
-        toast({ title: "Purchase successful!", description: `You bought ${nft.name}.` });
-        setBalance(prev => prev - nft.price);
-    })
-    .catch((error: any) => {
-         if (error.message.includes("permission-denied") || error.code === "permission-denied") {
-             errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: originalNftRef.path, // This is a guess, might need more context
-                operation: 'write', // Represents the entire transaction
-             }));
-        } else {
-            console.error("Purchase failed:", error);
-            toast({ variant: "destructive", title: "Purchase Failed", description: error.message });
-        }
-    });
+      toast({ title: "Purchase successful!", description: `You bought ${nft.name}.` });
+      
+      // The real-time listeners for the marketplace/inventory will handle showing/hiding the NFT automatically.
+    
+    } catch (error: any) {
+        console.error("Purchase failed:", error);
+        toast({ variant: "destructive", title: "Purchase Failed", description: error.message });
+    }
   };
+
 
   const isLoading = isFirebaseUserLoading || isCollectionLoading || isTelegramUserLoading;
 
