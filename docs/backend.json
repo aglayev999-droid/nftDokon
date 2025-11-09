@@ -26,42 +26,23 @@
     },
     "NftGift": {
       "title": "NFT Gift",
-      "description": "Represents an NFT gift owned by a user in their inventory.",
+      "description": "Represents an NFT gift owned by a user or listed on the marketplace/auction.",
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the NFT gift."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the NFT gift."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the NFT gift."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the NFT gift's image.",
-          "format": "uri"
-        },
-        "isListed": {
-          "type": "boolean",
-          "description": "Indicates if the NFT is listed for sale on the marketplace."
-        },
-        "price": {
-          "type": "number",
-          "description": "Price of the NFT gift in UZS (if listed)."
-        },
-        "rarity": {
-          "type": "string",
-          "description": "Rarity of the NFT gift."
-        },
-        "collection": {
-          "type": "string",
-          "description": "The collection to which the NFT gift belongs."
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "lottieUrl": { "type": "string", "format": "uri" },
+        "isListed": { "type": "boolean" },
+        "price": { "type": "number" },
+        "rarity": { "type": "string" },
+        "collection": { "type": "string" },
+        "ownerId": { "type": "string", "description": "Firebase Auth UID of the owner." },
+        "startTime": { "type": "number", "description": "Auction start timestamp." },
+        "endTime": { "type": "number", "description": "Auction end timestamp." },
+        "startingPrice": { "type": "number" },
+        "highestBid": { "type": "number" }
       },
       "required": ["id", "name", "imageUrl", "isListed"]
     }
@@ -85,6 +66,14 @@
           "entityName": "NftGift",
           "schema": { "$ref": "#/entities/NftGift" },
           "description": "Stores the NFT gifts that a user owns in their inventory. This is a subcollection of the user's document."
+        }
+      },
+      {
+        "path": "/auctions/{auctionId}",
+        "definition": {
+          "entityName": "NftGift",
+          "schema": { "$ref": "#/entities/NftGift" },
+          "description": "Stores all currently active auctions. The document ID is the same as the NFT ID."
         }
       }
     ]

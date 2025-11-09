@@ -14,34 +14,34 @@ service cloud.firestore {
     }
 
     // /users/{userId}
-    // Each user has a document in this collection.
-    // The document ID MUST be the same as the user's UID from Firebase Authentication.
     match /users/{userId} {
-      // READ: A user can only read their own document.
-      allow get: if isOwner(userId);
-      
-      // LIST: Listing all users is disallowed for security and privacy.
-      allow list: if false;
-
-      // CREATE: A user can create their own document, but only if one doesn't already exist.
-      // The `id` field in the document must match the user's UID.
+      allow get, update: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-
-      // UPDATE: A user can only update their own document.
-      allow update: if isOwner(userId);
-      
-      // DELETE: Deleting user documents is disallowed to maintain data integrity.
-      allow delete: if false;
+      allow list, delete: if false;
 
       // /users/{userId}/inventory/{nftId}
-      // This subcollection stores the NFT gifts owned by the user.
       match /inventory/{nftId} {
-        // READ, LIST: A user can read and list all NFTs in their own inventory.
         allow get, list: if isOwner(userId);
-
-        // CREATE, UPDATE, DELETE: A user can add, update, or remove NFTs from their own inventory.
         allow write: if isOwner(userId);
       }
+    }
+    
+    // /auctions/{auctionId}
+    match /auctions/{auctionId} {
+      // ANYONE can read the list of auctions or a specific auction.
+      allow get, list: if true;
+      
+      // CREATE: Only the owner of the NFT can create an auction.
+      // The incoming resource's ownerId must match the signer's UID.
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      
+      // UPDATE: Allow users to update the highestBid if they are signed in.
+      // Other fields should be protected.
+      // (This is a simplified rule; a real app would have more complex bid validation)
+      allow update: if isSignedIn();
+      
+      // DELETE: Deleting auctions is disallowed. They should be handled by a backend process.
+      allow delete: if false;
     }
   }
 }

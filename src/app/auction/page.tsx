@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { NftCard } from '@/components/nft-card';
+
+import { useLanguage } from '@/context/language-context';
 import {
   Select,
   SelectContent,
@@ -8,13 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { auctionNfts, Nft } from '@/lib/data';
-import { useLanguage } from '@/context/language-context';
 import { AuctionCard } from '@/components/auction-card';
+import { Nft } from '@/lib/data';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function AuctionPage() {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
+
+  const firestore = useFirestore();
+  const auctionsRef = collection(firestore, 'auctions');
+  const { data: auctionNfts, isLoading } = useCollection<Nft>(auctionsRef);
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -30,23 +35,35 @@ export default function AuctionPage() {
             <SelectContent>
               <SelectItem value="ending-soon">{t('endingSoon')}</SelectItem>
               <SelectItem value="newest">{t('newest')}</SelectItem>
-              <SelectItem value="price-high-low">{t('priceHighToLow')}</SelectItem>
-              <SelectItem value="price-low-high">{t('priceLowToHigh')}</SelectItem>
+              <SelectItem value="price-high-low">
+                {t('priceHighToLow')}
+              </SelectItem>
+              <SelectItem value="price-low-high">
+                {t('priceLowToHigh')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {auctionNfts.length > 0 ? (
+      {isLoading && (
+         <div className="col-span-full text-center py-16">
+          <p className="text-muted-foreground">Auksionlar yuklanmoqda...</p>
+        </div>
+      )}
+
+      {!isLoading && auctionNfts && auctionNfts.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {auctionNfts.map((nft) => (
             <AuctionCard key={nft.id} nft={nft} />
           ))}
         </div>
       ) : (
-        <div className="col-span-full text-center py-16">
-          <p className="text-muted-foreground">{t('noAuctionsAvailable')}</p>
-        </div>
+        !isLoading && (
+            <div className="col-span-full text-center py-16">
+                <p className="text-muted-foreground">{t('noAuctionsAvailable')}</p>
+            </div>
+        )
       )}
     </div>
   );

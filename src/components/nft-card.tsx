@@ -39,7 +39,9 @@ import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
 import { LottiePlayer } from './lottie-player';
-import { useUser } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, doc } from 'firebase/firestore';
 
 
 interface NftCardProps {
@@ -49,11 +51,19 @@ interface NftCardProps {
 
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const { translations } = useLanguage();
-  const { setNftStatus } = useNft();
+  const { setNftStatus, removeNftFromInventory, addNftToAuctions } = useNft();
   const { user: currentUser } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
+
   const [price, setPrice] = useState('');
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
+  
+  const [isAuctionStep1Open, setIsAuctionStep1Open] = useState(false);
+  const [isAuctionStep2Open, setIsAuctionStep2Open] = useState(false);
+  const [auctionDuration, setAuctionDuration] = useState('');
+  const [auctionStartPrice, setAuctionStartPrice] = useState('');
+
 
   const t = (key: string, params?: { [key: string]: any }) => {
     let translation = translations[key] || key;
@@ -94,6 +104,56 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       description: t('unlistSuccessDescription', { nftName: nft.name }),
     });
   };
+
+  const handleProceedToAuctionStep2 = () => {
+      const duration = parseInt(auctionDuration, 10);
+      const startPrice = parseFloat(auctionStartPrice);
+      if (isNaN(duration) || duration <= 0) {
+        toast({ variant: 'destructive', title: t('error'), description: "Iltimos, to'g'ri auksion muddatini kiriting." });
+        return;
+      }
+      if (isNaN(startPrice) || startPrice < 0) {
+        toast({ variant: 'destructive', title: t('error'), description: "Iltimos, to'g'ri boshlang'ich narxni kiriting." });
+        return;
+      }
+
+      setIsAuctionStep1Open(false);
+      setIsAuctionStep2Open(true);
+  }
+
+  const handleConfirmAuction = async () => {
+    if (!currentUser) return;
+    const durationHours = parseInt(auctionDuration, 10);
+    const startingPrice = parseFloat(auctionStartPrice);
+
+    const startTime = Date.now();
+    const endTime = startTime + durationHours * 60 * 60 * 1000;
+
+    const auctionData: Nft = {
+        ...nft,
+        isListed: true, // It's on auction, so it's listed
+        price: startingPrice, // Starting price
+        startingPrice: startingPrice,
+        highestBid: startingPrice,
+        startTime,
+        endTime,
+    };
+    
+    // 1. Add to auctions collection
+    await addNftToAuctions(auctionData);
+
+    // 2. Remove from inventory
+    await removeNftFromInventory(nft.id);
+
+    toast({
+      title: "Muvaffaqiyatli!",
+      description: `${nft.name} auksionga qo'yildi.`
+    });
+
+    setIsAuctionStep2Open(false);
+    setAuctionDuration('');
+    setAuctionStartPrice('');
+  }
   
   const isOwner = currentUser && nft.ownerId === currentUser.uid;
   const nftIdNumber = nft.id.split('-').pop();
@@ -154,7 +214,47 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
           </DialogContent>
         </Dialog>
       )}
-      <Button variant="outline" className="w-full">{t('send')}</Button>
+      {/* Auction Dialogs */}
+      <Dialog open={isAuctionStep1Open} onOpenChange={setIsAuctionStep1Open}>
+        <DialogTrigger asChild>
+            <Button variant="outline" className="w-full">{t('auction')}</Button>
+        </DialogTrigger>
+        <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Auksionga qo'yish</DialogTitle>
+              <DialogDescription>Auksion parametrlarini kiriting.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="duration" className="text-right">Davomiyligi (soat)</Label>
+                <Input id="duration" type="number" value={auctionDuration} onChange={(e) => setAuctionDuration(e.target.value)} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="start-price" className="text-right">Boshlang'ich narx (UZS)</Label>
+                <Input id="start-price" type="number" value={auctionStartPrice} onChange={(e) => setAuctionStartPrice(e.target.value)} className="col-span-3" />
+              </div>
+            </div>
+            <DialogFooter>
+                <Button onClick={handleProceedToAuctionStep2}>Keyingisi</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+       <AlertDialog open={isAuctionStep2Open} onOpenChange={setIsAuctionStep2Open}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Auksionni tasdiqlash</AlertDialogTitle>
+              <AlertDialogDescription>
+                Siz rostan ham "{nft.name}" giftini auksionga qo'ymoqchimisiz?
+                <br /><br />
+                <strong>Eslatma:</strong> Auksionga qo'ygandan keyin qaytarib bo'lmaydi!
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setAuctionStartPrice('')}>Yo'q</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmAuction}>Ha</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 
@@ -198,7 +298,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
           </div>
         )}
       </CardContent>
-      {action === 'buy' || action === 'manage' ? (
+      {action === 'buy' || (action === 'manage' && isOwner) ? (
         <CardFooter className="p-4 pt-0">
           {action === 'buy' ? buyActions : manageActions}
         </CardFooter>

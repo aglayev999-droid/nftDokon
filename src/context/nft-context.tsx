@@ -8,6 +8,7 @@ import React, {
   Dispatch,
   SetStateAction,
   useEffect,
+  useCallback,
 } from 'react';
 import { Nft, nftsData } from '@/lib/data';
 import {
@@ -17,13 +18,15 @@ import {
   useMemoFirebase,
 } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 
 interface NftContextType {
   nfts: Nft[];
   setNftStatus: (nftId: string, isListed: boolean, price?: number) => void;
   isLoading: boolean;
+  removeNftFromInventory: (nftId: string) => Promise<void>;
+  addNftToAuctions: (nft: Nft) => Promise<void>;
 }
 
 const NftContext = createContext<NftContextType | undefined>(undefined);
@@ -47,9 +50,12 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
       console.log("User inventory is empty, bootstrapping with initial NFTs...");
       const batch = writeBatch(firestore);
       nftsData.forEach((nft) => {
-        const userNft = { ...nft, ownerId: user.uid };
-        const newDocRef = doc(firestore, 'users', user.uid, 'inventory', nft.id);
-        batch.set(newDocRef, userNft);
+        // Only give user-1 the "Fresh Socks" NFT
+        if (nft.id === 'fresh-socks-91000') {
+           const userNft = { ...nft, ownerId: user.uid };
+           const newDocRef = doc(firestore, 'users', user.uid, 'inventory', nft.id);
+           batch.set(newDocRef, userNft);
+        }
       });
       
       batch.commit().catch(error => {
@@ -81,10 +87,24 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
     setDocumentNonBlocking(docRef, updatedData, { merge: true });
   };
   
+  const removeNftFromInventory = useCallback(async (nftId: string) => {
+    if (!user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'inventory', nftId);
+    deleteDocumentNonBlocking(docRef);
+  }, [user, firestore]);
+
+  const addNftToAuctions = useCallback(async (nft: Nft) => {
+      const auctionsCollection = collection(firestore, 'auctions');
+      // Use the original nft.id to keep it consistent
+      const auctionDocRef = doc(auctionsCollection, nft.id);
+      setDocumentNonBlocking(auctionDocRef, nft, {});
+  }, [firestore]);
+
+
   const isLoading = isUserLoading || isCollectionLoading;
 
   return (
-    <NftContext.Provider value={{ nfts: nftsFromDb || [], setNftStatus, isLoading }}>
+    <NftContext.Provider value={{ nfts: nftsFromDb || [], setNftStatus, isLoading, removeNftFromInventory, addNftToAuctions }}>
       {children}
     </NftContext.Provider>
   );
