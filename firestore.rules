@@ -21,8 +21,7 @@ service cloud.firestore {
 
       // /users/{userId}/inventory/{nftId}
       match /inventory/{nftId} {
-        allow get, list: if isOwner(userId);
-        allow write: if isOwner(userId);
+        allow read, write: if isOwner(userId);
       }
     }
     
