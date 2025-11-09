@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useLanguage } from '@/context/language-context';
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { AuctionCard } from '@/components/auction-card';
 import { Nft } from '@/lib/data';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
 export default function AuctionPage() {
@@ -18,7 +19,12 @@ export default function AuctionPage() {
   const t = (key: string) => translations[key] || key;
 
   const firestore = useFirestore();
-  const auctionsRef = collection(firestore, 'auctions');
+  
+  const auctionsRef = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'auctions') : null),
+    [firestore]
+  );
+  
   const { data: auctionNfts, isLoading } = useCollection<Nft>(auctionsRef);
 
   return (
