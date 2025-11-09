@@ -8,15 +8,18 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 # Bu yerga @BotFather orqali olingan o'z bot tokeningizni qo'ying
 BOT_TOKEN = "8108408790:AAHEhCXQXaaZEbQeZfGblqvWKwhNLOfxDco" 
 # Xabarlar yuborilishi kerak bo'lgan akkauntning Telegram ID raqami
-ADMIN_CHAT_ID = "7275593552"  # Misol uchun: 123456789
-# Veb-saytingizning to'liq manzili
-WEB_APP_URL = "t.me/testnftkerakbot/httpsnftdokononrendercom" 
+ADMIN_CHAT_ID = "7275593552"
+# Veb-saytingizning to'liq manzili, "https://" bilan boshlanishi shart
+WEB_APP_URL = "https://nftdokon.onrender.com" 
 
 # --- ASOSIY FUNKSIYALAR ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Foydalanuvchi /start buyrug'ini yuborganda ishga tushadi."""
     
+    if not update.message:
+        return
+
     # "Webni ochish" tugmasini yaratish
     keyboard = [
         [InlineKeyboardButton("Webni ochish", web_app=WebAppInfo(url=WEB_APP_URL))]
@@ -59,7 +62,7 @@ async def send_withdrawal_notification(context: ContextTypes.DEFAULT_TYPE, user_
 def main() -> None:
     """Botni ishga tushiradi va /start buyrug'ini kutadi."""
     
-    if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or ADMIN_CHAT_ID == "YOUR_ADMIN_CHAT_ID":
+    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or not ADMIN_CHAT_ID:
         print("XATOLIK: Iltimos, `bot.py` faylidagi BOT_TOKEN va ADMIN_CHAT_ID o'zgaruvchilarini to'ldiring.")
         return
 
@@ -95,3 +98,4 @@ if __name__ == '__main__':
 # Bu faylning o'zini `python bot.py` buyrug'i bilan ishga tushirsangiz,
 # u faqat Telegramdan keladigan /start buyrug'iga javob beradi.
 # Xabarnoma yuborish logikasi asosiy saytning backend qismidan chaqirilishi kerak.
+
