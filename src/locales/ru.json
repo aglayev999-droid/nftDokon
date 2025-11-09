@@ -42,7 +42,7 @@
   "myInventory": "Мой инвентарь",
   "addOrMint": "Добавить/создать",
   "addNft": "Добавить NFT",
-  "addNftDescription": "Уважаемый клиент, чтобы добавить NFT в инвентарь, отправьте ваш NFT из Telegram пользователю @nullprime!",
+  "addNftDescription": "Уважаемый клиент, чтобы добавить NFT в свой инвентарь, отправьте свой гифт из Telegram боту @nftkerak_saqlovchi. Бот определит, от кого пришел гифт, и добавит его в ваш аккаунт.",
   "understood": "Понятно",
   "withdrawNft": "Вывести NFT",
   "withdrawNfts": "Вывести NFT",

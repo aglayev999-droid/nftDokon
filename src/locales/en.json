@@ -42,7 +42,7 @@
   "myInventory": "My Inventory",
   "addOrMint": "Add/Mint New",
   "addNft": "Add NFT",
-  "addNftDescription": "Dear customer, to add an NFT to your inventory, please send your NFT from Telegram to @nullprime!",
+  "addNftDescription": "Dear customer, to add an NFT to your inventory, send your gift from Telegram to the @nftkerak_saqlovchi bot. The bot will identify who sent the gift and add it to your account.",
   "understood": "Understood",
   "withdrawNft": "Withdraw NFT",
   "withdrawNfts": "Withdraw NFTs",
