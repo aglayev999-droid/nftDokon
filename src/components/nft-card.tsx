@@ -14,11 +14,8 @@ import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { NftDetailDialog } from './nft-detail-dialog';
 import {
@@ -38,6 +35,8 @@ import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
 import { LottiePlayer } from './lottie-player';
+import { DialogDescription, DialogFooter as NftDialogFooter } from './ui/dialog';
+
 
 interface NftCardProps {
   nft: Nft;
@@ -141,9 +140,9 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
                 onChange={(e) => setPrice(e.target.value)}
               />
             </div>
-            <DialogFooter>
+            <NftDialogFooter>
               <Button onClick={handleSell}>{t('listForSale')}</Button>
-            </DialogFooter>
+            </NftDialogFooter>
           </DialogContent>
         </Dialog>
       )}
@@ -155,7 +154,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const cardContent = (
      <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
-        <div className="relative aspect-square">
+        <div className="relative aspect-square w-full">
           {nft.lottieUrl ? (
             <LottiePlayer src={nft.lottieUrl} />
           ) : (

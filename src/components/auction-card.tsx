@@ -72,7 +72,7 @@ export function AuctionCard({ nft }: AuctionCardProps) {
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
-        <div className="relative aspect-square">
+        <div className="relative aspect-square w-full">
           {nft.lottieUrl ? (
             <LottiePlayer src={nft.lottieUrl} />
           ) : (
