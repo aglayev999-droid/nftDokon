@@ -1,6 +1,7 @@
 
 import json
 import asyncio
+import sys
 from telethon import TelegramClient, functions, types, errors
 
 api_id = 16108895
@@ -85,7 +86,12 @@ async def transfer_gift(username: str):
 
 
 async def main():
-    target_username = input("Target username (@username): ").strip()
+    if len(sys.argv) < 2:
+        print("Iltimos, argument sifatida yuboriladigan foydalanuvchi nomini kiriting (@username).")
+        print("Masalan: python scripts/auto_relayer.py @durov")
+        return
+
+    target_username = sys.argv[1].strip()
     await transfer_gift(target_username)
 
 
