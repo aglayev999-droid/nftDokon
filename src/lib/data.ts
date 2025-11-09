@@ -44,7 +44,20 @@ const getImage = (id: string) => {
   };
 };
 
-export const nfts: Nft[] = [];
+export const nfts: Nft[] = [
+  {
+    id: 'ice-cream-1',
+    name: 'Ice Cream 1',
+    price: 15,
+    rarity: 'Common',
+    collection: 'Pixel Presents',
+    model: 'Common',
+    background: 'Neon',
+    imageUrl: 'https://nft.fragment.com/gift/icecream-1.medium.jpg',
+    imageHint: 'ice cream',
+    isListed: true,
+  },
+];
 
 export const auctionNfts: Nft[] = [
     {

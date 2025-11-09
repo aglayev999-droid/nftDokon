@@ -35,10 +35,12 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useLanguage } from '@/context/language-context';
+import { NftCard } from '@/components/nft-card';
+import { nfts } from '@/lib/data';
 
 export default function MarketplacePage() {
-  const listedNfts: any[] = [];
   const { translations } = useLanguage();
+  const listedNfts = nfts.filter((nft) => nft.isListed);
 
   const t = (key: string) => {
     return translations[key] || key;
@@ -139,7 +141,7 @@ export default function MarketplacePage() {
             {filtersContent}
           </div>
         </aside>
-        <main className="lg:col-span-4">
+        <main className="lg:col-span-3">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <h1 className="text-4xl font-headline font-bold text-foreground">
               {t('nftMarketplace')}
@@ -177,7 +179,9 @@ export default function MarketplacePage() {
           </div>
           {listedNfts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {/* NFTs will be rendered here */}
+                {listedNfts.map((nft) => (
+                  <NftCard key={nft.id} nft={nft} />
+                ))}
             </div>
              ) : (
                 <div className="col-span-full text-center py-16">
