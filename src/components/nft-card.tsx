@@ -1,3 +1,4 @@
+
 'use client';
 import Image from 'next/image';
 import type { Nft, User } from '@/lib/data';
@@ -28,6 +29,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from './ui/alert-dialog';
 import { useState } from 'react';
 import { Input } from './ui/input';
@@ -105,6 +107,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   };
   
   const isOwner = nft.ownerId === currentUser.id;
+  const nftIdNumber = nft.id.split('-').pop();
 
   const buyActions = (
     <>
@@ -188,7 +191,10 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         </div>
       </CardHeader>
       <CardContent className="p-4 space-y-2">
-        <CardTitle className="text-xl font-headline truncate">{nft.name}</CardTitle>
+        <div className="flex justify-between items-baseline">
+            <CardTitle className="text-xl font-headline truncate">{nft.name}</CardTitle>
+            <span className="text-sm font-mono text-muted-foreground">#{nftIdNumber}</span>
+        </div>
         {(action === 'buy' && nft.isListed) && (
           <div className="flex items-center gap-2 text-primary font-bold text-2xl">
             <Tag className="w-5 h-5 text-accent" />
