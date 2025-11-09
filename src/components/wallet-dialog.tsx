@@ -26,6 +26,7 @@ import {
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { useState } from 'react';
 
 export function WalletDialog() {
   const { translations } = useLanguage();
@@ -33,6 +34,24 @@ export function WalletDialog() {
 
   // Placeholder for recent actions
   const recentActions: any[] = [];
+  
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value.replace(/\D/g, '').substring(0, 16);
+    const formattedInput = input.match(/.{1,4}/g)?.join(' ') || '';
+    setCardNumber(formattedInput);
+  };
+
+  const handleCardExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value.replace(/\D/g, '').substring(0, 4);
+    let formattedInput = input;
+    if (input.length > 2) {
+      formattedInput = `${input.substring(0, 2)}/${input.substring(2, 4)}`;
+    }
+    setCardExpiry(formattedInput);
+  };
 
   return (
     <div className="bg-background">
@@ -62,11 +81,11 @@ export function WalletDialog() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cardNumber">{t('cardNumber')}</Label>
-                    <Input id="cardNumber" placeholder="8600 1234 5678 9012" />
+                    <Input id="cardNumber" placeholder="8600 1234 5678 9012" value={cardNumber} onChange={handleCardNumberChange} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cardExpiry">{t('cardExpiry')}</Label>
-                    <Input id="cardExpiry" placeholder="MM/YY" />
+                    <Input id="cardExpiry" placeholder="MM/YY" value={cardExpiry} onChange={handleCardExpiryChange} />
                   </div>
                    <div className="space-y-2">
                     <Label htmlFor="cardHolder">{t('cardHolder')}</Label>
