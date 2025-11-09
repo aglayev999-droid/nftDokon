@@ -26,7 +26,10 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
 
   const handleWatch = () => {
     // Creates a PascalCase version of the ID, e.g., "ice-cream-1" -> "IceCream-1"
-    const nftLinkID = nft.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+    const nftLinkID = nft.id
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join('-');
     const url = `https://t.me/nft/${nftLinkID}`;
     window.open(url, '_blank');
   };
