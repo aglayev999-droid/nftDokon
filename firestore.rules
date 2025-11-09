@@ -1,0 +1,105 @@
+/**
+ * @fileoverview Firestore Security Rules for the TON Gift Marketplace.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Each user has a dedicated
+ * data tree under `/users/{userId}`, and only the authenticated user can access
+ * their own data. NFT gifts are stored within user-specific subcollections,
+ * providing authorization independence.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user account information.
+ * - /users/{userId}/nft_gifts/{giftId}: Stores NFT gifts owned by a user.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own data (ownership enforced via path-based rules).
+ * - Listing other users' data is disallowed to prevent information leakage.
+ *
+ * Denormalization for Authorization:
+ * - The `ownerId` field in `NftGift` is unnecessary because ownership is already
+ *   established by the path `/users/{userId}/nft_gifts/{giftId}`. The `ownerId`
+ *   field can be used for data integrity.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to user account documents.
+     * @path /users/{userId}
+     * @allow (create) User with UID 'user_abc' can create their own account document with id = 'user_abc'.
+     * @deny (create) User with UID 'user_abc' cannot create an account document with id = 'user_xyz'.
+     * @allow (get) User with UID 'user_abc' can read their own account document.
+     * @deny (get) User with UID 'user_abc' cannot read another user's account document.
+     * @allow (list) User with UID 'user_abc' can list their own account documents.
+     * @deny (list) Listing all user documents is disallowed.
+     * @allow (update) User with UID 'user_abc' can update their own account document.
+     * @deny (update) User with UID 'user_abc' cannot update another user's account document.
+     * @allow (delete) User with UID 'user_abc' can delete their own account document.
+     * @deny (delete) User with UID 'user_abc' cannot delete another user's account document.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      // Verified user identity
+      //function isSignedIn() {
+      //  return request.auth != null;
+      //}
+
+      // Verifies that the current user is the owner of the resource
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      // Verifies that the current user is the owner of the resource and it exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId)
+                   && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to NFT gifts owned by a user.
+     * @path /users/{userId}/nft_gifts/{giftId}
+     * @allow (create) User with UID 'user_abc' can create an NFT gift in their own collection.
+     * @deny (create) User with UID 'user_abc' cannot create an NFT gift in another user's collection.
+     * @allow (get) User with UID 'user_abc' can read an NFT gift in their own collection.
+     * @deny (get) User with UID 'user_abc' cannot read an NFT gift in another user's collection.
+     * @allow (list) User with UID 'user_abc' can list NFT gifts in their own collection.
+     * @deny (list) User with UID 'user_abc' cannot list NFT gifts in another user's collection.
+     * @allow (update) User with UID 'user_abc' can update an NFT gift in their own collection.
+     * @deny (update) User with UID 'user_abc' cannot update an NFT gift in another user's collection.
+     * @allow (delete) User with UID 'user_abc' can delete an NFT gift in their own collection.
+     * @deny (delete) User with UID 'user_abc' cannot delete an NFT gift in another user's collection.
+     * @principle Enforces document ownership and data segregation for NFT gifts.
+     */
+    match /users/{userId}/nft_gifts/{giftId} {
+      // Verified user identity
+      //function isSignedIn() {
+      //  return request.auth != null;
+      //}
+
+      // Verifies that the current user is the owner of the resource
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+       // Verifies that the current user is the owner of the resource and it exists
+      function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
