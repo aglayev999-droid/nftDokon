@@ -110,5 +110,7 @@
   "copiedToClipboard": "скопирован в буфер обмена.",
   "error": "Ошибка",
   "enterValidAmount": "Пожалуйста, введите действительную сумму.",
-  "username": "Имя пользователя"
+  "username": "Имя пользователя",
+  "depositSuccessful": "Пополнение успешно",
+  "balanceUpdated": "Ваш баланс пополнен на {amount}."
 }

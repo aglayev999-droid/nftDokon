@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -30,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/context/language-context';
 import { WalletDialog } from './wallet-dialog';
+import { useWallet } from '@/context/wallet-context';
 
 declare global {
   interface Window {
@@ -41,11 +43,16 @@ export default function Header() {
   const pathname = usePathname();
   const [isTelegram, setIsTelegram] = useState(false);
   const { language, setLanguage, translations } = useLanguage();
+  const { balance } = useWallet();
   const [theme, setTheme] = useState('dark');
 
   const t = (key: string) => {
     return translations[key] || key;
   };
+  
+  const formatBalance = (value: number) => {
+    return new Intl.NumberFormat('uz-UZ').format(value);
+  }
 
   const navigation = [
     { name: t('market'), href: '/' },
@@ -139,7 +146,7 @@ export default function Header() {
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="font-semibold">
-                0 UZS
+                {formatBalance(balance)} UZS
                 <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/20 text-primary ml-2">
                     <Plus className="h-4 w-4" />
                 </div>

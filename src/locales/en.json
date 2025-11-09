@@ -110,5 +110,7 @@
   "copiedToClipboard": "has been copied to clipboard.",
   "error": "Error",
   "enterValidAmount": "Please enter a valid amount.",
-  "username": "Username"
+  "username": "Username",
+  "depositSuccessful": "Deposit Successful",
+  "balanceUpdated": "Your balance has been updated by {amount}."
 }

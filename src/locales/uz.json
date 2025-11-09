@@ -110,5 +110,7 @@
   "copiedToClipboard": "buferga nusxalandi.",
   "error": "Xatolik",
   "enterValidAmount": "Iltimos, to'g'ri miqdorni kiriting.",
-  "username": "Foydalanuvchi nomi"
+  "username": "Foydalanuvchi nomi",
+  "depositSuccessful": "Hisob to'ldirildi",
+  "balanceUpdated": "Hisobingiz {amount} ga to'ldirildi."
 }

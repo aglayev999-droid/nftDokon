@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -30,11 +31,21 @@ import { Label } from './ui/label';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { user } from '@/lib/data';
+import { useWallet } from '@/context/wallet-context';
 
 export function WalletDialog() {
   const { translations } = useLanguage();
-  const t = (key: string) => translations[key] || key;
+  const t = (key: string, params?: { [key: string]: any }) => {
+    let translation = translations[key] || key;
+    if (params) {
+        Object.keys(params).forEach(param => {
+            translation = translation.replace(`{${param}}`, params[param]);
+        });
+    }
+    return translation;
+  };
   const { toast } = useToast();
+  const { balance, setBalance } = useWallet();
 
   const recentActions: any[] = [];
   
@@ -79,6 +90,18 @@ export function WalletDialog() {
       username: user.username,
     });
   };
+  
+  const handleConfirmDeposit = () => {
+    if (finalDepositInfo) {
+      // This is a simulation. In a real app, you'd verify the payment.
+      setBalance(prev => prev + finalDepositInfo.amount);
+      toast({
+        title: t('depositSuccessful'),
+        description: t('balanceUpdated', { amount: finalDepositInfo.amount.toLocaleString('uz-UZ', { style: 'currency', currency: 'UZS' }) }),
+      });
+    }
+    resetDepositFlow();
+  };
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -92,6 +115,14 @@ export function WalletDialog() {
     setDepositAmount('');
     setFinalDepositInfo(null);
   };
+
+  const formatBalance = (value: number) => {
+    // Show decimals only if they are not zero
+    return new Intl.NumberFormat('uz-UZ', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    }).format(value);
+  }
   
   return (
     <div className="bg-background">
@@ -127,7 +158,7 @@ export function WalletDialog() {
                     <Label htmlFor="cardExpiry">{t('cardExpiry')}</Label>
                     <Input id="cardExpiry" placeholder="MM/YY" value={cardExpiry} onChange={handleCardExpiryChange} />
                   </div>
-                  <DialogClose asChild>
+                   <DialogClose asChild>
                     <Button className="w-full">{t('connectCard')}</Button>
                   </DialogClose>
                 </div>
@@ -140,7 +171,7 @@ export function WalletDialog() {
           <CardContent className="p-6">
             <p className="text-sm text-primary/80">{t('walletBalance')}</p>
             <p className="text-4xl font-bold font-headline text-primary">
-              0.00 <span className="text-2xl">UZS</span>
+              {formatBalance(balance)} <span className="text-2xl">UZS</span>
             </p>
           </CardContent>
         </Card>
@@ -209,7 +240,7 @@ export function WalletDialog() {
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button className="w-full">{t('ok')}</Button>
+                    <Button onClick={handleConfirmDeposit} className="w-full">{t('ok')}</Button>
                   </DialogClose>
                 </DialogFooter>
               </DialogContent>
