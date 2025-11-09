@@ -5,7 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Gift, Menu, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import {
@@ -104,11 +110,15 @@ export default function Header() {
                 </Button>
             </SheetTrigger>
             <SheetContent side="left">
-                <Link href="/" className="flex items-center">
-                <Gift className="h-6 w-6 text-primary" />
-                <span className="ml-2 font-bold font-headline">{t('appName')}</span>
-                </Link>
-                <div className="mt-8 flex flex-col space-y-4">
+                <SheetHeader className="text-left mb-8">
+                  <SheetTitle>
+                    <Link href="/" className="flex items-center">
+                      <Gift className="h-6 w-6 text-primary" />
+                      <span className="ml-2 font-bold font-headline">{t('appName')}</span>
+                    </Link>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col space-y-4">
                 {navigation.map((item) => (
                     <Link
                     key={item.name}
