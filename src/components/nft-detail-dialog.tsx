@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { Tag, Send, BarChart, Share2, Diamond } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { DialogHeader, DialogTitle } from './ui/dialog';
 
 interface NftDetailDialogProps {
   nft: Nft;
@@ -61,6 +62,9 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
 
   return (
     <div className="bg-card text-card-foreground">
+       <DialogHeader className="sr-only">
+        <DialogTitle>{nft.name}</DialogTitle>
+      </DialogHeader>
       <div className="relative aspect-square max-w-sm mx-auto mt-6">
         <Image
           src={nft.imageUrl}
