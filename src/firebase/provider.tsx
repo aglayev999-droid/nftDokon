@@ -68,7 +68,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     isUserLoading: true, // Start loading until first auth event
     userError: null,
   });
-  const { isTelegram, isLoading: isTelegramLoading } = useTelegramUser();
+  const { user: telegramUser, isLoading: isTelegramLoading } = useTelegramUser();
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
@@ -85,17 +85,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       auth,
       (firebaseUser) => {
         if (firebaseUser) {
+          // If a user is already logged in (anonymous or otherwise), use it.
           setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-        } else if (!isTelegram) {
-          // If not in Telegram and no user, sign in anonymously for web-based development
+        } else {
+          // If no user is logged in, sign in anonymously.
+          // This ensures every client (Telegram or web) gets a stable UID for Firestore rules and data association.
           signInAnonymously(auth).catch((error) => {
             console.error("Anonymous sign-in failed:", error);
-            setUserAuthState({ user: null, isUserLoading: false, userError: error });
-          });
-        } else {
-           // In Telegram but no user, sign in anonymously. This creates a stable UID for the Telegram user.
-           signInAnonymously(auth).catch((error) => {
-            console.error("Anonymous sign-in for Telegram user failed:", error);
             setUserAuthState({ user: null, isUserLoading: false, userError: error });
           });
         }
@@ -106,7 +102,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe();
-  }, [auth, isTelegram, isTelegramLoading]);
+  }, [auth, isTelegramLoading]); // Depend only on auth and the telegram loading state
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {

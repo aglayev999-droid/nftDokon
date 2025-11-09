@@ -6,12 +6,10 @@ import React, {
   useContext,
   useState,
   ReactNode,
-  Dispatch,
-  SetStateAction,
   useEffect,
   useCallback,
 } from 'react';
-import { Nft, nftsData } from '@/lib/data';
+import { Nft, nftsData, UserAccount } from '@/lib/data';
 import {
   useFirestore,
   useUser,
@@ -19,7 +17,7 @@ import {
   useMemoFirebase,
 } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
-import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
 
@@ -49,22 +47,48 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const { data: nftsFromDb, isLoading: isCollectionLoading } =
     useCollection<Nft>(inventoryRef);
 
+  // Effect to bootstrap user data and inventory
   useEffect(() => {
-    // Bootstrap inventory only when firebase and telegram user are loaded, and inventory is confirmed empty
-    if (userId && !isFirebaseUserLoading && !isTelegramUserLoading && !isCollectionLoading && nftsFromDb?.length === 0) {
-      console.log("User inventory is empty, bootstrapping with initial NFTs...");
+    // Wait until we have both firebase and telegram user info
+    if (!userId || !telegramUser || isFirebaseUserLoading || isTelegramUserLoading) {
+      return;
+    }
+
+    const userDocRef = doc(firestore, 'users', userId);
+
+    // Bootstrap user document and inventory
+    const bootstrapUser = async () => {
       const batch = writeBatch(firestore);
+
+      // 1. Create the user document
+      const newUserAccount: UserAccount = {
+        id: userId,
+        telegramId: String(telegramUser.id),
+        username: telegramUser.username || `${telegramUser.first_name}${telegramUser.last_name || ''}`,
+        balance: 100000, // Initial balance for new users
+      };
+      batch.set(userDocRef, newUserAccount);
+
+      // 2. Bootstrap inventory for the new user
       nftsData.forEach((nft) => {
         const userNft = { ...nft, ownerId: userId };
         const newDocRef = doc(firestore, 'users', userId, 'inventory', nft.id);
         batch.set(newDocRef, userNft);
       });
       
-      batch.commit().catch(error => {
-        console.error("Error bootstrapping inventory:", error);
+      await batch.commit();
+      console.log(`User ${userId} and their inventory have been bootstrapped.`);
+    };
+
+    // Check if inventory is empty, which implies a new user
+    if (!isCollectionLoading && nftsFromDb?.length === 0) {
+      console.log(`User inventory for ${userId} is empty, bootstrapping...`);
+      bootstrapUser().catch(error => {
+        console.error("Error bootstrapping user and inventory:", error);
       });
     }
-  }, [userId, nftsFromDb, isCollectionLoading, isFirebaseUserLoading, isTelegramUserLoading, firestore]);
+
+  }, [userId, telegramUser, firestore, nftsFromDb, isCollectionLoading, isFirebaseUserLoading, isTelegramUserLoading]);
 
   const setNftStatus = (nftId: string, isListed: boolean, price?: number) => {
     if (!userId) {

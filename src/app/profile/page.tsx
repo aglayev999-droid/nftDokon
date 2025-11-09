@@ -4,15 +4,32 @@ import Image from 'next/image';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Diamond, Gift, HandCoins, Users, User as UserIcon } from 'lucide-react';
+import { Diamond, Gift, HandCoins, Users } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { useTelegramUser } from '@/context/telegram-user-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { UserAccount } from '@/lib/data';
 
 export default function ProfilePage() {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
-  const { user: telegramUser, isLoading } = useTelegramUser();
+  
+  const { user: telegramUser, isLoading: isTelegramLoading } = useTelegramUser();
+  const { user: firebaseUser, isUserLoading: isFirebaseLoading } = useUser();
+  const firestore = useFirestore();
+
+  const userId = firebaseUser?.uid;
+
+  const userAccountRef = useMemoFirebase(
+    () => (firestore && userId ? doc(firestore, 'users', userId) : null),
+    [firestore, userId]
+  );
+  
+  const { data: userAccount, isLoading: isUserAccountLoading } = useDoc<UserAccount>(userAccountRef);
+
+  const isLoading = isTelegramLoading || isFirebaseLoading || isUserAccountLoading;
 
   const referralLink = `https://nftkerak.com/join?ref=${telegramUser?.username || telegramUser?.id}`;
   
@@ -27,6 +44,7 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center gap-4">
           <Skeleton className="w-24 h-24 rounded-full" />
           <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-32" />
         </div>
         <div className="grid grid-cols-3 gap-4 text-center">
           <Skeleton className="h-12 w-full" />
@@ -39,13 +57,13 @@ export default function ProfilePage() {
     );
   }
 
-  const user = { // Dummy data for now, will be replaced with real data from Firestore
-    volume: 0,
-    bought: 0,
-    sold: 0,
-    portalsLevel: 0,
-    referrals: 0,
-    friendsVolume: 0,
+  const userStats = { 
+    volume: userAccount?.balance || 0, // Using balance as a stand-in for volume for now
+    bought: 0, // This needs to be tracked in Firestore
+    sold: 0, // This needs to be tracked in Firestore
+    portalsLevel: 0, // This needs to be tracked in Firestore
+    referrals: 0, // This needs to be tracked in Firestore
+    friendsVolume: 0, // This needs to be tracked in Firestore
   };
 
   const displayName = telegramUser.last_name 
@@ -84,19 +102,19 @@ export default function ProfilePage() {
         <div>
           <p className="text-sm text-muted-foreground">{t('totalVolume')}</p>
           <p className="text-lg font-bold flex items-center justify-center gap-1">
-            <Diamond className="w-4 h-4 text-primary" /> {user.volume.toFixed(2)}
+            <Diamond className="w-4 h-4 text-primary" /> {userStats.volume.toFixed(2)}
           </p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{t('bought')}</p>
           <p className="text-lg font-bold flex items-center justify-center gap-1">
-            <Gift className="w-4 h-4" /> {user.bought}
+            <Gift className="w-4 h-4" /> {userStats.bought}
           </p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{t('sold')}</p>
           <p className="text-lg font-bold flex items-center justify-center gap-1">
-            <HandCoins className="w-4 h-4" /> {user.sold}
+            <HandCoins className="w-4 h-4" /> {userStats.sold}
           </p>
         </div>
       </div>
@@ -114,26 +132,26 @@ export default function ProfilePage() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-             <CardTitle className="font-headline">{t('level')} {user.portalsLevel}</CardTitle>
-             <span className="text-sm font-bold text-primary">{user.portalsLevel * 20}%</span>
+             <CardTitle className="font-headline">{t('level')} {userStats.portalsLevel}</CardTitle>
+             <span className="text-sm font-bold text-primary">{userStats.portalsLevel * 20}%</span>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-           <Progress value={user.portalsLevel * 20} className="h-2" />
+           <Progress value={userStats.portalsLevel * 20} className="h-2" />
            <div className="grid grid-cols-2 gap-4 text-sm">
              <div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                    <div className="w-4 h-4 font-bold text-center">UZS</div>
                    <span>{t('earned')}</span>
                 </div>
-                <p className="font-bold text-lg">{user.friendsVolume}</p>
+                <p className="font-bold text-lg">{userStats.friendsVolume}</p>
              </div>
              <div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                    <Users className="w-4 h-4" />
                    <span>{t('friends')}</span>
                 </div>
-                <p className="font-bold text-lg">{user.referrals}</p>
+                <p className="font-bold text-lg">{userStats.referrals}</p>
              </div>
            </div>
             <div className="text-center">

@@ -1,6 +1,13 @@
 
 import { PlaceHolderImages } from './placeholder-images';
 
+export interface UserAccount {
+  id: string;
+  telegramId: string;
+  username: string;
+  balance: number;
+}
+
 export interface Nft {
   id: string;
   name: string;
