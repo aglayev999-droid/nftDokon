@@ -48,7 +48,7 @@ export const nfts: Nft[] = [
   {
     id: 'ice-cream-1',
     name: 'Ice Cream 1',
-    price: 15,
+    price: 35000,
     rarity: 'Common',
     collection: 'Pixel Presents',
     model: 'Common',
