@@ -14,6 +14,8 @@ import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
