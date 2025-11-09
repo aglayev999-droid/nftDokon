@@ -13,6 +13,34 @@ import { AuctionCard } from '@/components/auction-card';
 import { Nft } from '@/lib/data';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+
+// A simple in-memory cache to track which auctions have been processed
+const processedAuctions = new Set<string>();
+
+async function processEndedAuction(auctionId: string) {
+    if (processedAuctions.has(auctionId)) {
+        // Already processed in this session, don't send another request
+        return;
+    }
+    try {
+        const response = await fetch('/api/process-auction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ auctionId }),
+        });
+        const result = await response.json();
+        if (response.ok) {
+            console.log(`Successfully processed auction ${auctionId}:`, result.message);
+            processedAuctions.add(auctionId);
+        } else {
+            console.error(`Failed to process auction ${auctionId}:`, result.error);
+        }
+    } catch (error) {
+        console.error(`Network error processing auction ${auctionId}:`, error);
+    }
+}
+
 
 export default function AuctionPage() {
   const { translations } = useLanguage();
@@ -26,6 +54,21 @@ export default function AuctionPage() {
   );
   
   const { data: auctionNfts, isLoading } = useCollection<Nft>(auctionsRef);
+
+  // Effect to process ended auctions
+  useEffect(() => {
+    if (auctionNfts && auctionNfts.length > 0) {
+      const now = Date.now();
+      auctionNfts.forEach(nft => {
+        if (nft.endTime && now > nft.endTime) {
+          // This auction has ended, trigger the processing
+          processEndedAuction(nft.id);
+        }
+      });
+    }
+  }, [auctionNfts]); // Rerun whenever the auction list changes
+
+  const activeAuctions = auctionNfts?.filter(nft => nft.endTime && Date.now() < nft.endTime) || [];
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -58,9 +101,9 @@ export default function AuctionPage() {
         </div>
       )}
 
-      {!isLoading && auctionNfts && auctionNfts.length > 0 ? (
+      {!isLoading && activeAuctions.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {auctionNfts.map((nft) => (
+          {activeAuctions.map((nft) => (
             <AuctionCard key={nft.id} nft={nft} />
           ))}
         </div>
