@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, {
@@ -38,11 +39,11 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  // Use Telegram User ID for the document path
-  const userId = telegramUser?.id.toString();
+  // Use Firebase Auth UID for the document path
+  const userId = firebaseUser?.uid;
 
   const inventoryRef = useMemoFirebase(
-    () => (userId ? collection(firestore, 'users', userId, 'inventory') : null),
+    () => (userId && firestore ? collection(firestore, 'users', userId, 'inventory') : null),
     [userId, firestore]
   );
 
@@ -51,13 +52,13 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
 
   // This effect runs once to bootstrap the user's inventory if it's empty
   useEffect(() => {
-    if (userId && firebaseUser && nftsFromDb?.length === 0 && !isCollectionLoading) {
+    if (userId && !isCollectionLoading && nftsFromDb?.length === 0) {
       console.log("User inventory is empty, bootstrapping with initial NFTs...");
       const batch = writeBatch(firestore);
       nftsData.forEach((nft) => {
         // Only give the default user the "Fresh Socks" NFT for demo purposes
         if (nft.id === 'fresh-socks-91000') {
-           const userNft = { ...nft, ownerId: firebaseUser.uid }; // Keep firebase uid as owner
+           const userNft = { ...nft, ownerId: userId };
            const newDocRef = doc(firestore, 'users', userId, 'inventory', nft.id);
            batch.set(newDocRef, userNft);
         }
@@ -67,10 +68,10 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error bootstrapping inventory:", error);
       });
     }
-  }, [userId, firebaseUser, nftsFromDb, isCollectionLoading, firestore]);
+  }, [userId, nftsFromDb, isCollectionLoading, firestore]);
 
   const setNftStatus = (nftId: string, isListed: boolean, price?: number) => {
-    if (!userId || !firebaseUser) {
+    if (!userId) {
       toast({
         variant: 'destructive',
         title: 'Authentication Error',
@@ -99,13 +100,13 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   }, [userId, firestore]);
 
   const addNftToAuctions = useCallback(async (nft: Nft) => {
-      if (!firebaseUser) return;
+      if (!userId) return;
       const auctionsCollection = collection(firestore, 'auctions');
       // Ensure the NFT has the correct ownerId before putting to auction
-      const auctionNft = { ...nft, ownerId: firebaseUser.uid };
+      const auctionNft = { ...nft, ownerId: userId };
       const auctionDocRef = doc(auctionsCollection, nft.id);
       setDocumentNonBlocking(auctionDocRef, auctionNft, {});
-  }, [firestore, firebaseUser]);
+  }, [firestore, userId]);
 
 
   const isLoading = isFirebaseUserLoading || isCollectionLoading || isTelegramUserLoading;
