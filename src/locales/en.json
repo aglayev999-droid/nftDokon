@@ -102,7 +102,7 @@
   "amountInUZS": "Amount (UZS)",
   "proceed": "Proceed",
   "orderSuccessful": "Order Successful",
-  "name": "Name",
+  "cardName": "Card Name",
   "card": "Card",
   "transferInstruction": "Please transfer the exact amount to the specified card.",
   "ok": "OK",

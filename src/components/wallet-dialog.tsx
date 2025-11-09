@@ -41,7 +41,7 @@ export function WalletDialog() {
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
-  const [finalDepositInfo, setFinalDepositInfo] = useState<{ amount: number; card: string; cardFull: string; name: string; } | null>(null);
+  const [finalDepositInfo, setFinalDepositInfo] = useState<{ amount: number; card: string; cardFull: string; cardName: string; } | null>(null);
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.replace(/\D/g, '').substring(0, 16);
@@ -69,13 +69,13 @@ export function WalletDialog() {
       return;
     }
     const randomCents = Math.floor(Math.random() * 100);
-    const finalAmount = amount * 100 + randomCents; // Store in cents to avoid float issues
+    const finalAmount = amount + randomCents / 100;
     const fullCardNumber = '9860016603644820';
     setFinalDepositInfo({
-      amount: finalAmount / 100,
+      amount: finalAmount,
       card: `8600 **** **** ${fullCardNumber.slice(-4)}`,
       cardFull: fullCardNumber,
-      name: 'R/B',
+      cardName: 'R/B',
     });
   };
 
@@ -182,17 +182,8 @@ export function WalletDialog() {
                     <span className="font-semibold">{user.username}</span>
                   </div>
                    <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{t('name')}:</span>
-                    <span className="font-semibold">{finalDepositInfo.name}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{t('price')}:</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-primary">{finalDepositInfo.amount.toLocaleString('uz-UZ')} UZS</span>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(String(finalDepositInfo.amount), t('price'))}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <span className="text-muted-foreground">{t('cardName')}:</span>
+                    <span className="font-semibold">{finalDepositInfo.cardName}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">{t('card')}:</span>
@@ -203,6 +194,16 @@ export function WalletDialog() {
                       </Button>
                     </div>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">{t('price')}:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-primary">{finalDepositInfo.amount.toLocaleString('uz-UZ', {minimumFractionDigits: 2, maximumFractionDigits: 2})} UZS</span>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(finalDepositInfo.amount.toFixed(2), t('price'))}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
                   <p className="text-center text-muted-foreground pt-2">{t('transferInstruction')}</p>
                 </div>
                 <DialogFooter>

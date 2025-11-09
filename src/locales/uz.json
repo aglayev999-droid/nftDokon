@@ -102,7 +102,7 @@
   "amountInUZS": "Miqdor (UZS)",
   "proceed": "Davom etish",
   "orderSuccessful": "Buyurtma muvaffaqiyatli",
-  "name": "Ismi",
+  "cardName": "Karta ismi",
   "card": "Karta",
   "transferInstruction": "Iltimos, ko'rsatilgan kartaga aniq summani o'tkazing.",
   "ok": "OK",

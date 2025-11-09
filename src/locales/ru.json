@@ -102,7 +102,7 @@
   "amountInUZS": "Сумма (UZS)",
   "proceed": "Продолжить",
   "orderSuccessful": "Заказ выполнен",
-  "name": "Имя",
+  "cardName": "Имя на карте",
   "card": "Карта",
   "transferInstruction": "Пожалуйста, переведите точную сумму на указанную карту.",
   "ok": "OK",
