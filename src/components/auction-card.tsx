@@ -68,6 +68,7 @@ export function AuctionCard({ nft }: AuctionCardProps) {
   }
 
   const bidAmount = (nft.highestBid || 0) * 1.05;
+  const nftIdNumber = nft.id.split('-').pop();
 
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
@@ -89,7 +90,7 @@ export function AuctionCard({ nft }: AuctionCardProps) {
       <CardContent className="p-4 space-y-2">
         <div className="flex justify-between items-baseline">
             <CardTitle className="text-xl font-headline truncate">{nft.name}</CardTitle>
-            <span className="text-sm font-mono text-muted-foreground">#{nft.id.split('-')[1]}</span>
+            <span className="text-sm font-mono text-muted-foreground">#{nftIdNumber}</span>
         </div>
         <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">{t('highestBid')}</span>

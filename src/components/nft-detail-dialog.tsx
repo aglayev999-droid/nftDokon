@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -66,6 +67,8 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
     </div>
   );
 
+  const nftIdNumber = nft.id.split('-').pop();
+
   return (
     <div className="bg-card text-card-foreground">
        <DialogHeader className="sr-only">
@@ -87,7 +90,7 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
       <div className="p-6 space-y-4">
         <div className="text-center">
             <h2 className="text-2xl font-headline font-bold">{nft.name}</h2>
-            <p className="font-mono text-muted-foreground">#{nft.id.split('-')[1]}</p>
+            <p className="font-mono text-muted-foreground">#{nftIdNumber}</p>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">

@@ -1,3 +1,4 @@
+
 import { PlaceHolderImages } from './placeholder-images';
 
 export interface Nft {
@@ -130,6 +131,19 @@ export const nftsData: Nft[] = [
     imageUrl: 'https://nft.fragment.com/gift/MoonPendant-2075.jpg',
     lottieUrl: 'https://nft.fragment.com/gift/MoonPendant-2075.lottie.json',
     imageHint: 'moon pendant',
+    isListed: true,
+  },
+  {
+    id: 'fresh-socks-91000',
+    name: 'Fresh Socks',
+    price: 91000,
+    rarity: 'Epic',
+    collection: 'TON Treasures',
+    model: 'Epic',
+    background: 'Neon',
+    imageUrl: 'https://nft.fragment.com/gift/FreshSocks-91000.jpg',
+    lottieUrl: 'https://nft.fragment.com/gift/FreshSocks-91000.lottie.json',
+    imageHint: 'fresh socks',
     isListed: true,
   }
 ];
