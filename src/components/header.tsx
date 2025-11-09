@@ -148,7 +148,7 @@ export default function Header() {
             </DialogContent>
           </Dialog>
 
-          <Button className="font-bold hidden sm:flex">
+          <Button className="font-bold hidden sm:flex" disabled={isTelegram}>
              {isTelegram ? t('connected') : t('connectWallet')}
           </Button>
            <Dialog>

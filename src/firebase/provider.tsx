@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -5,6 +6,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { useTelegramUser } from '@/context/telegram-user-context';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -66,36 +68,45 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     isUserLoading: true, // Start loading until first auth event
     userError: null,
   });
+  const { isTelegram, isLoading: isTelegramLoading } = useTelegramUser();
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
-    if (!auth) { // If no Auth service instance, cannot determine user state
+    if (!auth) {
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
       return;
     }
-
-    setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
+    // Don't do anything until we know if we are in Telegram or not
+    if (isTelegramLoading) {
+      return;
+    }
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => { // Auth state determined
+      (firebaseUser) => {
         if (firebaseUser) {
           setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-        } else {
-          // If no user, sign in anonymously
+        } else if (!isTelegram) {
+          // If not in Telegram and no user, sign in anonymously for web-based development
           signInAnonymously(auth).catch((error) => {
             console.error("Anonymous sign-in failed:", error);
             setUserAuthState({ user: null, isUserLoading: false, userError: error });
           });
+        } else {
+           // In Telegram but no user, sign in anonymously. This creates a stable UID for the Telegram user.
+           signInAnonymously(auth).catch((error) => {
+            console.error("Anonymous sign-in for Telegram user failed:", error);
+            setUserAuthState({ user: null, isUserLoading: false, userError: error });
+          });
         }
       },
-      (error) => { // Auth listener error
+      (error) => {
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
-    return () => unsubscribe(); // Cleanup
-  }, [auth]); // Depends on the auth instance
+    return () => unsubscribe();
+  }, [auth, isTelegram, isTelegramLoading]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {

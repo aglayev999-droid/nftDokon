@@ -39,7 +39,6 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  // Use Firebase Auth UID for the document path
   const userId = firebaseUser?.uid;
 
   const inventoryRef = useMemoFirebase(
@@ -50,25 +49,22 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const { data: nftsFromDb, isLoading: isCollectionLoading } =
     useCollection<Nft>(inventoryRef);
 
-  // This effect runs once to bootstrap the user's inventory if it's empty
   useEffect(() => {
-    if (userId && !isCollectionLoading && nftsFromDb?.length === 0) {
+    // Bootstrap inventory only when firebase and telegram user are loaded, and inventory is confirmed empty
+    if (userId && !isFirebaseUserLoading && !isTelegramUserLoading && !isCollectionLoading && nftsFromDb?.length === 0) {
       console.log("User inventory is empty, bootstrapping with initial NFTs...");
       const batch = writeBatch(firestore);
       nftsData.forEach((nft) => {
-        // Only give the default user the "Fresh Socks" NFT for demo purposes
-        if (nft.id === 'fresh-socks-91000') {
-           const userNft = { ...nft, ownerId: userId };
-           const newDocRef = doc(firestore, 'users', userId, 'inventory', nft.id);
-           batch.set(newDocRef, userNft);
-        }
+        const userNft = { ...nft, ownerId: userId };
+        const newDocRef = doc(firestore, 'users', userId, 'inventory', nft.id);
+        batch.set(newDocRef, userNft);
       });
       
       batch.commit().catch(error => {
         console.error("Error bootstrapping inventory:", error);
       });
     }
-  }, [userId, nftsFromDb, isCollectionLoading, firestore]);
+  }, [userId, nftsFromDb, isCollectionLoading, isFirebaseUserLoading, isTelegramUserLoading, firestore]);
 
   const setNftStatus = (nftId: string, isListed: boolean, price?: number) => {
     if (!userId) {
@@ -102,12 +98,10 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const addNftToAuctions = useCallback(async (nft: Nft) => {
       if (!userId) return;
       const auctionsCollection = collection(firestore, 'auctions');
-      // Ensure the NFT has the correct ownerId before putting to auction
       const auctionNft = { ...nft, ownerId: userId };
       const auctionDocRef = doc(auctionsCollection, nft.id);
       setDocumentNonBlocking(auctionDocRef, auctionNft, {});
   }, [firestore, userId]);
-
 
   const isLoading = isFirebaseUserLoading || isCollectionLoading || isTelegramUserLoading;
 
