@@ -37,20 +37,26 @@ export async function POST(request: NextRequest) {
         const ownerId = auctionData.ownerId;
         const finalPrice = auctionData.highestBid;
 
-        if (!winnerId || !ownerId || !finalPrice) {
+        if (!winnerId || !ownerId || !finalPrice || finalPrice <= 0) {
             // This case can happen if no one bid. The NFT should be returned to the owner.
-            // For now, we'll just delete the auction. A more robust implementation would return it.
-            console.log(`Auction ${auctionId} ended with no bids. Removing from auction.`);
+            console.log(`Auction ${auctionId} ended with no bids. Removing from auction and returning to owner.`);
+            const ownerInventoryRef = adminDb.collection('users').doc(ownerId).collection('inventory').doc(auctionId);
+            const returnedNftData: Partial<Nft> = { ...auctionData, ownerId: ownerId, isListed: false, price: 0 };
+            delete returnedNftData.highestBid;
+            delete returnedNftData.highestBidderId;
+            delete returnedNftData.startTime;
+            delete returnedNftData.endTime;
+
+            transaction.set(ownerInventoryRef, returnedNftData);
             transaction.delete(auctionRef);
-            // TODO: Return NFT to original owner's inventory
-            return { ok: true, message: 'Auction ended with no bids.'};
+            return { ok: true, message: 'Auction ended with no bids. NFT returned to owner.'};
         }
 
         if (winnerId === ownerId) {
-            // The owner won their own auction, which means no one else bid.
+            // The owner won their own auction, which means no one else bid higher than the starting price.
             // Just move the NFT back to their inventory.
-            const winnerInventoryRef = adminDb.collection('users').doc(winnerId).collection('inventory').doc(auctionId);
-            const newNftData: Omit<Nft, 'highestBid' | 'highestBidderId' | 'startTime' | 'endTime'> = {
+            const ownerInventoryRef = adminDb.collection('users').doc(ownerId).collection('inventory').doc(auctionId);
+            const newNftData: Partial<Nft> = {
                 ...auctionData,
                 isListed: false,
                 price: 0,
@@ -60,7 +66,7 @@ export async function POST(request: NextRequest) {
             delete newNftData.startTime;
             delete newNftData.endTime;
 
-            transaction.set(winnerInventoryRef, newNftData);
+            transaction.set(ownerInventoryRef, newNftData);
             transaction.delete(auctionRef);
             return { ok: true, message: 'Auction ended, NFT returned to owner.' };
         }
@@ -92,7 +98,7 @@ export async function POST(request: NextRequest) {
         transaction.update(ownerRef, { balance: admin.firestore.FieldValue.increment(finalPrice) });
         
         // 3. Prepare new NFT data for the winner
-        const newNftData: Omit<Nft, 'highestBid' | 'highestBidderId' | 'startTime' | 'endTime'> = {
+        const newNftData: Partial<Nft> = {
             ...auctionData,
             ownerId: winnerId, // New owner!
             isListed: false,
@@ -104,7 +110,7 @@ export async function POST(request: NextRequest) {
         delete newNftData.endTime;
         
         // 4. Create the NFT in the winner's inventory
-        const winnerInventoryRef = adminDb.collection('users').doc(winnerId).collection('inventory').doc(auctionId);
+        const winnerInventoryRef = winnerRef.collection('inventory').doc(auctionId);
         transaction.set(winnerInventoryRef, newNftData);
 
         // 5. Delete the NFT from the auctions collection
