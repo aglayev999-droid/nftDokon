@@ -8,7 +8,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { Nft, nftsData, UserAccount } from '@/lib/data';
+import { Nft, UserAccount } from '@/lib/data';
 import {
   useFirestore,
   useUser,
@@ -54,45 +54,36 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
 
   // Effect to bootstrap user data and inventory
   useEffect(() => {
-    // Wait until we have both firebase and telegram user info
     if (!userId || !telegramUser || isFirebaseUserLoading || isTelegramUserLoading || !firestore) {
       return;
     }
 
     const userDocRef = doc(firestore, 'users', userId);
 
-    const bootstrapUser = async () => {
-        const userDoc = await getDoc(userDocRef);
+    runTransaction(firestore, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
             console.log(`User document for ${userId} does not exist, bootstrapping...`);
-            const batch = writeBatch(firestore);
 
             const newUserAccount: UserAccount = {
                 id: userId,
                 telegramId: String(telegramUser.id),
-                username: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`,
+                username: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
                 balance: 1000000,
             };
-            batch.set(userDocRef, newUserAccount);
-            setBalance(newUserAccount.balance);
-
-            nftsData.forEach((nft) => {
-                // Assign some NFTs to the new user and some to others
-                 const userNft = { ...nft, ownerId: nft.id === 'fresh-socks-91000' ? userId : `other-user-${Math.random()}` };
-                const newDocRef = doc(firestore, 'users', userId, 'inventory', nft.id);
-                batch.set(newDocRef, userNft);
-            });
-            
-            await batch.commit();
-            console.log(`User ${userId} and their inventory have been bootstrapped.`);
-        } else {
-             const userData = userDoc.data() as UserAccount;
-             setBalance(userData.balance || 0);
+            transaction.set(userDocRef, newUserAccount);
+            // We can't setBalance here directly as it's outside React's render cycle for this transaction
         }
-    };
-    
-    bootstrapUser().catch(error => {
-        console.error("Error bootstrapping user and inventory:", error);
+    }).then(() => {
+        // After transaction, re-fetch or assume bootstrap values for immediate UI update
+        getDoc(userDocRef).then(docSnap => {
+            if (docSnap.exists()) {
+                const userData = docSnap.data() as UserAccount;
+                setBalance(userData.balance || 0);
+            }
+        });
+    }).catch(error => {
+        console.error("Error bootstrapping user:", error);
     });
 
   }, [userId, telegramUser, firestore, isFirebaseUserLoading, isTelegramUserLoading, setBalance]);
@@ -146,7 +137,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
     const userRef = doc(firestore, 'users', userId);
 
     runTransaction(firestore, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
+        const userDoc = await transaction.get(userRef);
         const auctionDoc = await transaction.get(auctionRef);
 
         if (!userDoc.exists()) throw new Error("Your user account was not found.");
@@ -222,6 +213,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
       // The real-time listeners for the marketplace/inventory will handle showing/hiding the NFT automatically.
     
     } catch (error: any) {
+        // We can check if this is a permission error from our API, but for now, just show the message.
         console.error("Purchase failed:", error);
         toast({ variant: "destructive", title: "Purchase Failed", description: error.message });
     }
