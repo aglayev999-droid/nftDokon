@@ -1,4 +1,3 @@
-
 'use client';
 import {
   AlertDialog,
@@ -9,13 +8,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { NftCard } from '@/components/nft-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Nft } from '@/lib/data';
-import { PlusCircle, Upload, Send, X } from 'lucide-react';
+import { PlusCircle, Upload, Send } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/context/language-context';
 import {
@@ -29,11 +27,23 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useNft } from '@/context/nft-context';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useTelegramUser } from '@/context/telegram-user-context';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function InventoryPage() {
-  const { nfts } = useNft();
+  const { nfts, removeNftFromInventory } = useNft();
   const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [telegramUsername, setTelegramUsername] = useState('');
   const { translations } = useLanguage();
+  const { user: firebaseUser } = useUser();
+  const { user: telegramUser } = useTelegramUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
 
   const t = (key: string, params?: { [key: string]: any }) => {
     let translation = translations[key] || key;
@@ -44,6 +54,13 @@ export default function InventoryPage() {
     }
     return translation;
   };
+  
+  // Set initial telegram username
+  useState(() => {
+    if(telegramUser?.username) {
+        setTelegramUsername(`@${telegramUser.username}`);
+    }
+  });
 
   const listedNfts = nfts.filter((nft) => nft.isListed);
   const unlistedNfts = nfts.filter((nft) => !nft.isListed);
@@ -60,11 +77,55 @@ export default function InventoryPage() {
     });
   };
 
-  const handleWithdraw = () => {
-    // Kelajakda yechib olish funksiyasi shu yerda bo'ladi
-    console.log('Yechib olinadigan NFTlar:', Array.from(selectedNfts));
-    alert(`${selectedNfts.size} ta NFT yechib olish uchun so'rov yuborildi.`);
+  const handleWithdraw = async () => {
+    if (selectedNfts.size === 0 || !firebaseUser || !firestore) {
+      return;
+    }
+    if (!telegramUsername || !telegramUsername.startsWith('@')) {
+        toast({
+            variant: 'destructive',
+            title: t('error'),
+            description: "Iltimos, to'g'ri Telegram manzilini kiriting (@username).",
+        });
+        return;
+    }
+
+    const withdrawalsRef = collection(firestore, 'withdrawals');
+    const selectedNftIds = Array.from(selectedNfts);
+    
+    try {
+        for (const nftId of selectedNftIds) {
+            const nft = nfts.find(n => n.id === nftId);
+            if (nft) {
+                 await addDoc(withdrawalsRef, {
+                    userId: firebaseUser.uid,
+                    telegramUsername: telegramUsername,
+                    nftId: nft.id,
+                    nftName: nft.name,
+                    status: 'pending',
+                    requestedAt: serverTimestamp(),
+                });
+                // Remove from inventory immediately after creating the request
+                await removeNftFromInventory(nftId);
+            }
+        }
+        
+        toast({
+            title: "So'rov yuborildi",
+            description: `${selectedNfts.size} ta NFTni yechib olish so'rovi muvaffaqiyatli yuborildi.`,
+        });
+
+    } catch (error) {
+         console.error("Error creating withdrawal request:", error);
+         toast({
+            variant: 'destructive',
+            title: "Xatolik",
+            description: "So'rovni yuborishda xatolik yuz berdi. Iltimos, keyinroq yana urinib ko'ring.",
+        });
+    }
+    
     setSelectedNfts(new Set());
+    setIsWithdrawDialogOpen(false);
   };
 
   const renderNftGrid = (nftList: Nft[], inWithdrawMode: boolean) => {
@@ -126,7 +187,7 @@ export default function InventoryPage() {
             </AlertDialogContent>
           </AlertDialog>
 
-          <Dialog>
+          <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
                 <Upload className="mr-2 h-4 w-4" />
@@ -143,7 +204,17 @@ export default function InventoryPage() {
               <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
                 {renderNftGrid(withdrawableNfts, true)}
               </div>
-              <DialogFooter>
+               <div className="space-y-2 mt-4">
+                  <Label htmlFor="telegram-username">Telegram Username</Label>
+                  <Input 
+                    id="telegram-username" 
+                    placeholder="@username" 
+                    value={telegramUsername}
+                    onChange={(e) => setTelegramUsername(e.target.value)}
+                    />
+                  <p className="text-xs text-muted-foreground">Sovg'a yuborilishi uchun Telegram manzilingizni kiriting.</p>
+                </div>
+              <DialogFooter className="mt-4">
                 <DialogClose asChild>
                    <Button
                     variant="outline"
@@ -153,7 +224,7 @@ export default function InventoryPage() {
                   </Button>
                 </DialogClose>
                 <Button
-                  disabled={selectedNfts.size === 0}
+                  disabled={selectedNfts.size === 0 || !telegramUsername}
                   onClick={handleWithdraw}
                 >
                   <Send className="mr-2 h-4 w-4" />

@@ -45,6 +45,20 @@
         "highestBid": { "type": "number" }
       },
       "required": ["id", "name", "imageUrl", "isListed"]
+    },
+    "WithdrawalRequest": {
+        "title": "Withdrawal Request",
+        "description": "Represents a user's request to withdraw an NFT to their Telegram account.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string", "description": "The Firebase UID of the user making the request." },
+            "telegramUsername": { "type": "string", "description": "The user's Telegram username to send the gift to." },
+            "nftId": { "type": "string", "description": "The ID of the NFT being withdrawn." },
+            "nftName": { "type": "string", "description": "The name of the NFT for easy identification." },
+            "status": { "type": "string", "enum": ["pending", "completed"], "description": "The status of the withdrawal request." },
+            "requestedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the request was made." }
+        },
+        "required": ["userId", "telegramUsername", "nftId", "nftName", "status", "requestedAt"]
     }
   },
   "auth": {
@@ -75,6 +89,14 @@
           "schema": { "$ref": "#/entities/NftGift" },
           "description": "Stores all currently active auctions. The document ID is the same as the NFT ID."
         }
+      },
+      {
+          "path": "/withdrawals/{withdrawalId}",
+          "definition": {
+              "entityName": "WithdrawalRequest",
+              "schema": { "$ref": "#/entities/WithdrawalRequest" },
+              "description": "Stores all withdrawal requests made by users. Processed manually by the site owner."
+          }
       }
     ]
   }
