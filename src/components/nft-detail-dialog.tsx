@@ -7,6 +7,7 @@ import { Separator } from './ui/separator';
 import { Tag, Send, BarChart, Share2, Diamond } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { DialogHeader, DialogTitle } from './ui/dialog';
+import { LottiePlayer } from './lottie-player';
 
 interface NftDetailDialogProps {
   nft: Nft;
@@ -47,7 +48,9 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
     };
     try {
       if (navigator.share) {
-        navigator.share(shareData);
+        navigator.share(shareData).catch(() => {
+          // Ignore errors from share, e.g. user cancelling the share sheet.
+        });
       } else {
         alert(t('shareNotSupported'));
       }
@@ -69,13 +72,17 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
         <DialogTitle>{nft.name}</DialogTitle>
       </DialogHeader>
       <div className="relative aspect-square max-w-sm mx-auto mt-6">
-        <Image
-          src={nft.imageUrl}
-          alt={nft.name}
-          fill
-          className="object-cover rounded-2xl"
-          data-ai-hint={nft.imageHint}
-        />
+        {nft.lottieUrl ? (
+            <LottiePlayer src={nft.lottieUrl} />
+          ) : (
+            <Image
+              src={nft.imageUrl}
+              alt={nft.name}
+              fill
+              className="object-cover rounded-2xl"
+              data-ai-hint={nft.imageHint}
+            />
+        )}
       </div>
       <div className="p-6 space-y-4">
         <div className="text-center">

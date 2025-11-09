@@ -14,6 +14,7 @@ import {
 import { Tag, Timer } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { useState, useEffect } from 'react';
+import { LottiePlayer } from './lottie-player';
 
 interface AuctionCardProps {
   nft: Nft;
@@ -72,13 +73,17 @@ export function AuctionCard({ nft }: AuctionCardProps) {
     <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
         <div className="relative aspect-square">
-          <Image
-            src={nft.imageUrl}
-            alt={nft.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint={nft.imageHint}
-          />
+          {nft.lottieUrl ? (
+            <LottiePlayer src={nft.lottieUrl} />
+          ) : (
+            <Image
+              src={nft.imageUrl}
+              alt={nft.name}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              data-ai-hint={nft.imageHint}
+            />
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-4 space-y-2">

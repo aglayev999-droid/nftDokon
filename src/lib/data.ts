@@ -9,6 +9,7 @@ export interface Nft {
   model: 'Common' | 'Rare' | 'Epic';
   background: 'Space' | 'Neon' | 'Holographic';
   imageUrl: string;
+  lottieUrl?: string;
   imageHint: string;
   isListed: boolean;
   highestBid?: number;
@@ -127,6 +128,7 @@ export const nftsData: Nft[] = [
     model: 'Epic',
     background: 'Space',
     imageUrl: 'https://nft.fragment.com/gift/MoonPendant-2075.jpg',
+    lottieUrl: 'https://nft.fragment.com/gift/MoonPendant-2075.lottie.json',
     imageHint: 'moon pendant',
     isListed: true,
   }

@@ -37,6 +37,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
+import { LottiePlayer } from './lottie-player';
 
 interface NftCardProps {
   nft: Nft;
@@ -155,13 +156,17 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
      <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
         <div className="relative aspect-square">
-          <Image
-            src={nft.imageUrl}
-            alt={nft.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint={nft.imageHint}
-          />
+          {nft.lottieUrl ? (
+            <LottiePlayer src={nft.lottieUrl} />
+          ) : (
+            <Image
+              src={nft.imageUrl}
+              alt={nft.name}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              data-ai-hint={nft.imageHint}
+            />
+          )}
           <div className="absolute top-2 right-2 bg-background/70 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-bold text-accent">
             {nft.rarity}
           </div>
