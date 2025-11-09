@@ -3,7 +3,7 @@
 import {
   ArrowDown,
   ArrowUp,
-  CreditCard,
+  Copy,
   Filter,
   Wallet,
 } from 'lucide-react';
@@ -11,7 +11,6 @@ import { Button } from './ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from './ui/card';
@@ -21,6 +20,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -28,16 +28,20 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { user } from '@/lib/data';
 
 export function WalletDialog() {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
+  const { toast } = useToast();
 
-  // Placeholder for recent actions
   const recentActions: any[] = [];
   
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [finalDepositInfo, setFinalDepositInfo] = useState<{ amount: number; card: string } | null>(null);
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.replace(/\D/g, '').substring(0, 16);
@@ -54,6 +58,37 @@ export function WalletDialog() {
     setCardExpiry(formattedInput);
   };
 
+  const handleDepositProceed = () => {
+    const amount = parseFloat(depositAmount);
+    if (!amount || amount <= 0) {
+      toast({
+        variant: "destructive",
+        title: t('error'),
+        description: t('enterValidAmount'),
+      });
+      return;
+    }
+    const randomCents = Math.floor(Math.random() * 100);
+    const finalAmount = amount + randomCents;
+    setFinalDepositInfo({
+      amount: finalAmount,
+      card: '8600 **** **** 3444', 
+    });
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: t('copied'),
+      description: `${label} ${t('copiedToClipboard')}`,
+    });
+  };
+
+  const resetDepositFlow = () => {
+    setDepositAmount('');
+    setFinalDepositInfo(null);
+  };
+  
   return (
     <div className="bg-background">
       <DialogHeader className="p-4 border-b">
@@ -106,10 +141,76 @@ export function WalletDialog() {
           </CardContent>
         </Card>
         <div className="grid grid-cols-2 gap-2">
-          <Button size="lg" variant="outline">
-            <ArrowDown className="mr-2 h-4 w-4" />
-            {t('deposit')}
-          </Button>
+          <Dialog onOpenChange={(open) => !open && resetDepositFlow()}>
+            <DialogTrigger asChild>
+               <Button size="lg" variant="outline">
+                <ArrowDown className="mr-2 h-4 w-4" />
+                {t('deposit')}
+              </Button>
+            </DialogTrigger>
+            {!finalDepositInfo ? (
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('depositAmount')}</DialogTitle>
+                  <DialogDescription>{t('enterDepositAmount')}</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <Label htmlFor="deposit-amount">{t('amountInUZS')}</Label>
+                  <Input 
+                    id="deposit-amount" 
+                    type="number" 
+                    placeholder="10000"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleDepositProceed} className="w-full">{t('proceed')}</Button>
+                </DialogFooter>
+              </DialogContent>
+            ) : (
+               <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('orderSuccessful')}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Username:</span>
+                    <span className="font-semibold">{user.username}</span>
+                  </div>
+                   <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">{t('name')}:</span>
+                    <span className="font-semibold">{user.username}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">{t('price')}:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-primary">{finalDepositInfo.amount.toLocaleString()} UZS</span>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(String(finalDepositInfo.amount), t('price'))}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">{t('card')}:</span>
+                     <div className="flex items-center gap-2">
+                      <span className="font-mono">{finalDepositInfo.card}</span>
+                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(finalDepositInfo.card.replace(/\s/g, ''), t('card'))}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-center text-muted-foreground pt-2">{t('transferInstruction')}</p>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button className="w-full">{t('ok')}</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            )}
+          </Dialog>
+
           <Button size="lg" variant="outline">
             <ArrowUp className="mr-2 h-4 w-4" />
             {t('withdraw')}

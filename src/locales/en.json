@@ -96,5 +96,18 @@
   "cardNumber": "Card Number",
   "cardExpiry": "Expiry (MM/YY)",
   "connectCard": "Connect Card",
-  "wallet": "Wallet"
+  "wallet": "Wallet",
+  "depositAmount": "Deposit Amount",
+  "enterDepositAmount": "Enter the amount you wish to deposit into your balance.",
+  "amountInUZS": "Amount (UZS)",
+  "proceed": "Proceed",
+  "orderSuccessful": "Order Successful",
+  "name": "Name",
+  "card": "Card",
+  "transferInstruction": "Please transfer the exact amount to the specified card.",
+  "ok": "OK",
+  "copied": "Copied",
+  "copiedToClipboard": "has been copied to clipboard.",
+  "error": "Error",
+  "enterValidAmount": "Please enter a valid amount."
 }

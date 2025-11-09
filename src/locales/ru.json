@@ -96,5 +96,18 @@
   "cardNumber": "Номер карты",
   "cardExpiry": "Срок действия (ММ/ГГ)",
   "connectCard": "Подключить карту",
-  "wallet": "Кошелек"
+  "wallet": "Кошелек",
+  "depositAmount": "Сумма пополнения",
+  "enterDepositAmount": "Введите сумму, на которую хотите пополнить баланс.",
+  "amountInUZS": "Сумма (UZS)",
+  "proceed": "Продолжить",
+  "orderSuccessful": "Заказ выполнен",
+  "name": "Имя",
+  "card": "Карта",
+  "transferInstruction": "Пожалуйста, переведите точную сумму на указанную карту.",
+  "ok": "OK",
+  "copied": "Скопировано",
+  "copiedToClipboard": "скопирован в буфер обмена.",
+  "error": "Ошибка",
+  "enterValidAmount": "Пожалуйста, введите действительную сумму."
 }

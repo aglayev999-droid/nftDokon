@@ -96,5 +96,18 @@
   "cardNumber": "Karta raqami",
   "cardExpiry": "Amal qilish muddati (OO/YY)",
   "connectCard": "Kartani ulash",
-  "wallet": "Hamyon"
+  "wallet": "Hamyon",
+  "depositAmount": "To'ldirish miqdori",
+  "enterDepositAmount": "Balansingizni toʻldirmoqchi boʻlgan miqdorni kiriting.",
+  "amountInUZS": "Miqdor (UZS)",
+  "proceed": "Davom etish",
+  "orderSuccessful": "Buyurtma muvaffaqiyatli",
+  "name": "Ismi",
+  "card": "Karta",
+  "transferInstruction": "Iltimos, ko'rsatilgan kartaga aniq summani o'tkazing.",
+  "ok": "OK",
+  "copied": "Nusxalandi",
+  "copiedToClipboard": "buferga nusxalandi.",
+  "error": "Xatolik",
+  "enterValidAmount": "Iltimos, to'g'ri miqdorni kiriting."
 }
