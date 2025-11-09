@@ -6,11 +6,11 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # --- SOZLAMALAR ---
 # Bu yerga @BotFather orqali olingan o'z bot tokeningizni qo'ying
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE" 
+BOT_TOKEN = "8108408790:AAHEhCXQXaaZEbQeZfGblqvWKwhNLOfxDco" 
 # Xabarlar yuborilishi kerak bo'lgan akkauntning Telegram ID raqami
-ADMIN_CHAT_ID = "YOUR_ADMIN_CHAT_ID"  # Misol uchun: 123456789
+ADMIN_CHAT_ID = "7275593552"  # Misol uchun: 123456789
 # Veb-saytingizning to'liq manzili
-WEB_APP_URL = "https://your-website-url.com" 
+WEB_APP_URL = "t.me/testnftkerakbot/httpsnftdokononrendercom" 
 
 # --- ASOSIY FUNKSIYALAR ---
 
