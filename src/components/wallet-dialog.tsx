@@ -41,7 +41,7 @@ export function WalletDialog() {
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
-  const [finalDepositInfo, setFinalDepositInfo] = useState<{ amount: number; card: string; cardFull: string; cardName: string; } | null>(null);
+  const [finalDepositInfo, setFinalDepositInfo] = useState<{ amount: number; card: string; cardFull: string; cardName: string; username: string; } | null>(null);
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.replace(/\D/g, '').substring(0, 16);
@@ -76,6 +76,7 @@ export function WalletDialog() {
       card: `8600 **** **** ${fullCardNumber.slice(-4)}`,
       cardFull: fullCardNumber,
       cardName: 'R/B',
+      username: user.username,
     });
   };
 
@@ -178,8 +179,8 @@ export function WalletDialog() {
                 </DialogHeader>
                 <div className="space-y-4 text-sm">
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Username:</span>
-                    <span className="font-semibold">{user.username}</span>
+                    <span className="text-muted-foreground">{t('username')}:</span>
+                    <span className="font-semibold">{finalDepositInfo.username}</span>
                   </div>
                    <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">{t('cardName')}:</span>
