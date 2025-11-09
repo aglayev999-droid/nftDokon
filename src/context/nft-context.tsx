@@ -124,7 +124,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const removeNftFromInventory = useCallback(async (nftId: string) => {
     if (!userId || !firestore) return;
     const docRef = doc(firestore, 'users', userId, 'inventory', nftId);
-    deleteDocumentNonBlocking(docRef);
+    await deleteDocumentNonBlocking(docRef);
   }, [userId, firestore]);
 
   const addNftToAuctions = useCallback(async (nft: Nft) => {
@@ -132,8 +132,9 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
       const auctionsCollection = collection(firestore, 'auctions');
       const auctionNft = { ...nft, ownerId: userId };
       const auctionDocRef = doc(auctionsCollection, nft.id);
-      setDocumentNonBlocking(auctionDocRef, auctionNft, {});
-  }, [firestore, userId]);
+      await setDocumentNonBlocking(auctionDocRef, auctionNft, {});
+      await removeNftFromInventory(nft.id);
+  }, [firestore, userId, removeNftFromInventory]);
   
   const placeBid = (nft: Nft, bidAmount: number) => {
     if (!userId || !firestore) {
@@ -145,7 +146,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
     const userRef = doc(firestore, 'users', userId);
 
     runTransaction(firestore, async (transaction) => {
-        const userDoc = await transaction.get(userRef);
+        const userDoc = await transaction.get(userDocRef);
         const auctionDoc = await transaction.get(auctionRef);
 
         if (!userDoc.exists()) throw new Error("Your user account was not found.");
