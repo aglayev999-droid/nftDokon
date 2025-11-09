@@ -16,8 +16,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { NftDetailDialog } from './nft-detail-dialog';
 import {
@@ -37,7 +39,6 @@ import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
 import { LottiePlayer } from './lottie-player';
-import { DialogDescription } from './ui/dialog';
 import { useUser } from '@/firebase';
 
 
