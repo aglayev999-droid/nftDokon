@@ -95,6 +95,8 @@
   "connectCardDescription": "Enter your Humo or Uzcard details to connect your wallet.",
   "cardNumber": "Card Number",
   "cardExpiry": "Expiry (MM/YY)",
+  "cardHolder": "Card Holder",
+  "autoFilled": "Auto-filled",
   "connectCard": "Connect Card",
   "wallet": "Wallet"
 }

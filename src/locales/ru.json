@@ -95,6 +95,8 @@
   "connectCardDescription": "Введите данные вашей карты Humo или Uzcard для подключения кошелька.",
   "cardNumber": "Номер карты",
   "cardExpiry": "Срок действия (ММ/ГГ)",
+  "cardHolder": "Держатель карты",
+  "autoFilled": "Заполняется автоматически",
   "connectCard": "Подключить карту",
   "wallet": "Кошелек"
 }

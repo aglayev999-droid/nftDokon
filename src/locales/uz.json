@@ -95,6 +95,8 @@
   "connectCardDescription": "Hamyonni ulash uchun Humo yoki Uzcard ma'lumotlaringizni kiriting.",
   "cardNumber": "Karta raqami",
   "cardExpiry": "Amal qilish muddati (OO/YY)",
+  "cardHolder": "Karta egasi",
+  "autoFilled": "Avtomatik to'ldiriladi",
   "connectCard": "Kartani ulash",
   "wallet": "Hamyon"
 }
