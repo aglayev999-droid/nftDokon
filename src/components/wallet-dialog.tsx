@@ -18,6 +18,7 @@ import {
 import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -48,7 +49,7 @@ export function WalletDialog() {
     const input = e.target.value.replace(/\D/g, '').substring(0, 4);
     let formattedInput = input;
     if (input.length > 2) {
-      formattedInput = `${input.substring(0, 2)}/${input.substring(2, 4)}`;
+      formattedInput = `${''}${input.substring(0, 2)}/${''}${input.substring(2, 4)}`;
     }
     setCardExpiry(formattedInput);
   };
@@ -87,7 +88,9 @@ export function WalletDialog() {
                     <Label htmlFor="cardExpiry">{t('cardExpiry')}</Label>
                     <Input id="cardExpiry" placeholder="MM/YY" value={cardExpiry} onChange={handleCardExpiryChange} />
                   </div>
-                  <Button className="w-full">{t('connectCard')}</Button>
+                  <DialogClose asChild>
+                    <Button className="w-full">{t('connectCard')}</Button>
+                  </DialogClose>
                 </div>
               </DialogContent>
             </Dialog>
