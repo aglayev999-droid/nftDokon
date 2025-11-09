@@ -112,5 +112,19 @@
   "enterValidAmount": "Iltimos, to'g'ri miqdorni kiriting.",
   "username": "Foydalanuvchi nomi",
   "depositSuccessful": "Hisob to'ldirildi",
-  "balanceUpdated": "Hisobingiz {amount} ga to'ldirildi."
+  "balanceUpdated": "Hisobingiz {amount} ga to'ldirildi.",
+  "listForSaleTitle": "Sotuvga qo'yish",
+  "listForSaleDescription": "NFT'ingizni bozorga qo'yish uchun unga narx belgilang.",
+  "priceInUZS": "Narx (UZS)",
+  "listForSale": "Sotuvga qo'yish",
+  "enterValidPrice": "Iltimos, to'g'ri narx kiriting.",
+  "listForSaleSuccessTitle": "NFT sotuvga qo'yildi",
+  "listForSaleSuccessDescription": "{nftName} {price} UZS narxi bilan sotuvga qo'yildi.",
+  "unlist": "Sotuvdan olish",
+  "confirmUnlistTitle": "Sotuvdan olishni tasdiqlang",
+  "confirmUnlistDescription": "{nftName} nomli NFT'ni bozordan olib tashlashga ishonchingiz komilmi?",
+  "cancel": "Bekor qilish",
+  "confirm": "Tasdiqlash",
+  "unlistSuccessTitle": "NFT sotuvdan olindi",
+  "unlistSuccessDescription": "{nftName} bozordan olib tashlandi."
 }

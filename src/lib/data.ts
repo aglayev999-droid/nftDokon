@@ -58,6 +58,30 @@ export const nfts: Nft[] = [
     imageHint: 'ice cream',
     isListed: true,
   },
+  {
+    id: 'ice-cream-2',
+    name: 'Ice Cream 2',
+    price: 0,
+    rarity: 'Rare',
+    collection: 'Pixel Presents',
+    model: 'Rare',
+    background: 'Space',
+    imageUrl: 'https://nft.fragment.com/gift/icecream-2.medium.jpg',
+    imageHint: 'ice cream cone',
+    isListed: false,
+  },
+  {
+    id: 'ice-cream-3',
+    name: 'Ice Cream 3',
+    price: 150000,
+    rarity: 'Epic',
+    collection: 'Pixel Presents',
+    model: 'Epic',
+    background: 'Holographic',
+    imageUrl: 'https://nft.fragment.com/gift/icecream-3.medium.jpg',
+    imageHint: 'ice cream sundae',
+    isListed: true,
+  },
 ];
 
 export const auctionNfts: Nft[] = [

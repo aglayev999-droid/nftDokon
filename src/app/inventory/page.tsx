@@ -3,6 +3,7 @@
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -14,10 +15,19 @@ import { Button } from '@/components/ui/button';
 import { NftCard } from '@/components/nft-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { nfts as allNfts, Nft } from '@/lib/data';
-import { PlusCircle, Upload, Send } from 'lucide-react';
+import { PlusCircle, Upload, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/context/language-context';
-
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 export default function InventoryPage() {
   const [nfts, setNfts] = useState<Nft[]>(allNfts);
@@ -27,9 +37,9 @@ export default function InventoryPage() {
   const t = (key: string, params?: { [key: string]: any }) => {
     let translation = translations[key] || key;
     if (params) {
-        Object.keys(params).forEach(param => {
-            translation = translation.replace(`{${param}}`, params[param]);
-        });
+      Object.keys(params).forEach((param) => {
+        translation = translation.replace(`{${param}}`, params[param]);
+      });
     }
     return translation;
   };
@@ -53,18 +63,15 @@ export default function InventoryPage() {
     // Kelajakda yechib olish funksiyasi shu yerda bo'ladi
     console.log('Yechib olinadigan NFTlar:', Array.from(selectedNfts));
     alert(`${selectedNfts.size} ta NFT yechib olish uchun so'rov yuborildi.`);
+    setSelectedNfts(new Set());
   };
-
 
   const renderNftGrid = (nftList: Nft[], inWithdrawMode: boolean) => {
     if (nftList.length === 0) {
       return (
         <div className="col-span-full text-center py-16">
           <p className="text-muted-foreground">
-            {inWithdrawMode
-              ? t('noNftsToWithdraw')
-              : t('noNftsInSection')
-            }
+            {inWithdrawMode ? t('noNftsToWithdraw') : t('noNftsInSection')}
           </p>
         </div>
       );
@@ -116,40 +123,44 @@ export default function InventoryPage() {
             </AlertDialogContent>
           </AlertDialog>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+          <Dialog>
+            <DialogTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
                 <Upload className="mr-2 h-4 w-4" />
                 {t('withdrawNft')}
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-4xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t('withdrawNfts')}</AlertDialogTitle>
-                <AlertDialogDescription>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>{t('withdrawNfts')}</DialogTitle>
+                <DialogDescription>
                   {t('selectNftsToWithdraw')}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
+                </DialogDescription>
+              </DialogHeader>
               <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
                 {renderNftGrid(nfts, true)}
               </div>
-              <AlertDialogFooter>
-                 <AlertDialogAction
-                  disabled={selectedNfts.size === 0}
-                  onClick={handleWithdraw}
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  {t('withdrawNSelected', { count: selectedNfts.size })}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button
+                    disabled={selectedNfts.size === 0}
+                    onClick={handleWithdraw}
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    {t('withdrawNSelected', { count: selectedNfts.size })}
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
-          <TabsTrigger value="all">{t('all')} ({nfts.length})</TabsTrigger>
+          <TabsTrigger value="all">
+            {t('all')} ({nfts.length})
+          </TabsTrigger>
           <TabsTrigger value="listed">
             {t('listed')} ({listedNfts.length})
           </TabsTrigger>
@@ -161,39 +172,39 @@ export default function InventoryPage() {
         <TabsContent value="all">
           {nfts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {nfts.map((nft) => <NftCard key={nft.id} nft={nft} action="manage" />)}
+              {nfts.map((nft) => (
+                <NftCard key={nft.id} nft={nft} action="manage" />
+              ))}
             </div>
           ) : (
             <div className="col-span-full text-center py-16">
-              <p className="text-muted-foreground">
-                {t('inventoryEmpty')}
-              </p>
+              <p className="text-muted-foreground">{t('inventoryEmpty')}</p>
             </div>
           )}
         </TabsContent>
         <TabsContent value="listed">
           {listedNfts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-               {listedNfts.map((nft) => <NftCard key={nft.id} nft={nft} action="manage" />)}
+              {listedNfts.map((nft) => (
+                <NftCard key={nft.id} nft={nft} action="manage" />
+              ))}
             </div>
           ) : (
             <div className="col-span-full text-center py-16">
-              <p className="text-muted-foreground">
-                {t('noListedNfts')}
-              </p>
+              <p className="text-muted-foreground">{t('noListedNfts')}</p>
             </div>
           )}
         </TabsContent>
         <TabsContent value="unlisted">
-           {unlistedNfts.length > 0 ? (
+          {unlistedNfts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                {unlistedNfts.map((nft) => <NftCard key={nft.id} nft={nft} action="manage" />)}
+              {unlistedNfts.map((nft) => (
+                <NftCard key={nft.id} nft={nft} action="manage" />
+              ))}
             </div>
           ) : (
             <div className="col-span-full text-center py-16">
-              <p className="text-muted-foreground">
-                {t('noUnlistedNfts')}
-              </p>
+              <p className="text-muted-foreground">{t('noUnlistedNfts')}</p>
             </div>
           )}
         </TabsContent>

@@ -112,5 +112,19 @@
   "enterValidAmount": "Пожалуйста, введите действительную сумму.",
   "username": "Имя пользователя",
   "depositSuccessful": "Пополнение успешно",
-  "balanceUpdated": "Ваш баланс пополнен на {amount}."
+  "balanceUpdated": "Ваш баланс пополнен на {amount}.",
+  "listForSaleTitle": "Выставить на продажу",
+  "listForSaleDescription": "Установите цену для вашего NFT, чтобы выставить его на рынок.",
+  "priceInUZS": "Цена (UZS)",
+  "listForSale": "Выставить на продажу",
+  "enterValidPrice": "Пожалуйста, введите действительную цену.",
+  "listForSaleSuccessTitle": "NFT выставлен на продажу",
+  "listForSaleSuccessDescription": "{nftName} был выставлен на продажу за {price} UZS.",
+  "unlist": "Снять с продажи",
+  "confirmUnlistTitle": "Подтвердите снятие с продажи",
+  "confirmUnlistDescription": "Вы уверены, что хотите убрать {nftName} с рынка?",
+  "cancel": "Отмена",
+  "confirm": "Подтвердить",
+  "unlistSuccessTitle": "NFT снят с продажи",
+  "unlistSuccessDescription": "{nftName} был убран с рынка."
 }

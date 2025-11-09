@@ -112,5 +112,19 @@
   "enterValidAmount": "Please enter a valid amount.",
   "username": "Username",
   "depositSuccessful": "Deposit Successful",
-  "balanceUpdated": "Your balance has been updated by {amount}."
+  "balanceUpdated": "Your balance has been updated by {amount}.",
+  "listForSaleTitle": "List for Sale",
+  "listForSaleDescription": "Set a price for your NFT to list it on the marketplace.",
+  "priceInUZS": "Price (UZS)",
+  "listForSale": "List for Sale",
+  "enterValidPrice": "Please enter a valid price.",
+  "listForSaleSuccessTitle": "NFT Listed",
+  "listForSaleSuccessDescription": "{nftName} has been listed for sale for {price} UZS.",
+  "unlist": "Unlist",
+  "confirmUnlistTitle": "Confirm Unlisting",
+  "confirmUnlistDescription": "Are you sure you want to remove {nftName} from the marketplace?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "unlistSuccessTitle": "NFT Unlisted",
+  "unlistSuccessDescription": "{nftName} has been removed from the marketplace."
 }
