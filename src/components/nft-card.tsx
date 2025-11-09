@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import type { Nft } from '@/lib/data';
+import type { Nft, User } from '@/lib/data';
 import { Button } from './ui/button';
 import {
   Card,
@@ -28,7 +28,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from './ui/alert-dialog';
 import { useState } from 'react';
 import { Input } from './ui/input';
@@ -37,12 +36,16 @@ import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
 import { LottiePlayer } from './lottie-player';
 import { DialogDescription, DialogFooter as NftDialogFooter } from './ui/dialog';
+import { user } from '@/lib/data';
 
 
 interface NftCardProps {
   nft: Nft;
   action?: 'buy' | 'manage';
 }
+
+// Hozircha test uchun joriy foydalanuvchini shu yerdan olib turamiz
+const currentUser: User = user;
 
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const { translations } = useLanguage();
@@ -100,6 +103,18 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
     });
     setIsUnlistAlertOpen(false);
   };
+  
+  const isOwner = nft.ownerId === currentUser.id;
+
+  const buyActions = (
+    <>
+      {isOwner ? (
+        <Button disabled className="w-full font-bold">{t('youAreOwner')}</Button>
+      ) : (
+        <Button className="w-full font-bold">{t('buy')}</Button>
+      )}
+    </>
+  );
 
   const manageActions = (
     <div className="w-full grid grid-cols-2 gap-2">
@@ -190,11 +205,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       </CardContent>
       {action === 'buy' || action === 'manage' ? (
         <CardFooter className="p-4 pt-0">
-          {action === 'buy' ? (
-            <Button className="w-full font-bold">{t('buy')}</Button>
-          ) : (
-            manageActions
-          )}
+          {action === 'buy' ? buyActions : manageActions}
         </CardFooter>
       ) : null}
     </Card>

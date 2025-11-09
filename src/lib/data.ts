@@ -13,6 +13,7 @@ export interface Nft {
   lottieUrl?: string;
   imageHint: string;
   isListed: boolean;
+  ownerId?: string; // kim egalik qilishi
   highestBid?: number;
   endTime?: number;
 }
@@ -24,6 +25,7 @@ export interface Achievement {
 }
 
 export interface User {
+  id: string;
   username: string;
   name: string;
   avatarUrl: string;
@@ -59,6 +61,7 @@ export const nftsData: Nft[] = [
     imageUrl: 'https://nft.fragment.com/gift/icecream-1.medium.jpg',
     imageHint: 'ice cream',
     isListed: true,
+    ownerId: 'user-1'
   },
   {
     id: 'ice-cream-2',
@@ -71,6 +74,7 @@ export const nftsData: Nft[] = [
     imageUrl: 'https://nft.fragment.com/gift/icecream-2.medium.jpg',
     imageHint: 'ice cream cone',
     isListed: false,
+    ownerId: 'user-1'
   },
   {
     id: 'ice-cream-3',
@@ -83,6 +87,7 @@ export const nftsData: Nft[] = [
     imageUrl: 'https://nft.fragment.com/gift/icecream-3.medium.jpg',
     imageHint: 'ice cream sundae',
     isListed: true,
+    ownerId: 'user-2'
   },
     {
     id: 'gift-1',
@@ -95,6 +100,7 @@ export const nftsData: Nft[] = [
     imageUrl: 'https://nft.fragment.com/gift/gift-1.medium.jpg',
     imageHint: 'gift box',
     isListed: true,
+    ownerId: 'user-2'
   },
   {
     id: 'gift-2',
@@ -107,6 +113,7 @@ export const nftsData: Nft[] = [
     imageUrl: 'https://nft.fragment.com/gift/gift-2.medium.jpg',
     imageHint: 'glowing gift',
     isListed: false,
+    ownerId: 'user-1'
   },
   {
     id: 'gift-3',
@@ -119,6 +126,7 @@ export const nftsData: Nft[] = [
     imageUrl: 'https://nft.fragment.com/gift/gift-3.medium.jpg',
     imageHint: 'crystal gift',
     isListed: true,
+    ownerId: 'user-3'
   },
   {
     id: 'moon-pendant-2075',
@@ -132,6 +140,7 @@ export const nftsData: Nft[] = [
     lottieUrl: 'https://nft.fragment.com/gift/MoonPendant-2075.lottie.json',
     imageHint: 'moon pendant',
     isListed: true,
+    ownerId: 'user-3'
   },
   {
     id: 'fresh-socks-91000',
@@ -145,6 +154,7 @@ export const nftsData: Nft[] = [
     lottieUrl: 'https://nft.fragment.com/gift/FreshSocks-91000.lottie.json',
     imageHint: 'fresh socks',
     isListed: true,
+    ownerId: 'user-1'
   }
 ];
 
@@ -162,6 +172,7 @@ export const auctionNfts: Nft[] = [
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/app-interact-dev-001.appspot.com/o/studio%2Fuser%2Fz5t3o1n349%2F301f251d-c8b5-4b02-8a9d-5bdc1b52a5a0.webp?alt=media&token=366cfc7a-9a00-4b05-b02f-b47590881b24",
         imageHint: 'birthday candle',
         isListed: true,
+        ownerId: 'user-2'
     },
     {
         id: 'auction-2',
@@ -176,6 +187,7 @@ export const auctionNfts: Nft[] = [
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/app-interact-dev-001.appspot.com/o/studio%2Fuser%2Fz5t3o1n349%2F719ac51c-6d6f-442a-9e12-c2081d25d19a.webp?alt=media&token=8544c770-5b65-4f4c-b472-a1f0f15d2a98",
         imageHint: 'magic cauldron',
         isListed: true,
+        ownerId: 'user-3'
     },
     {
         id: 'auction-3',
@@ -190,6 +202,7 @@ export const auctionNfts: Nft[] = [
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/app-interact-dev-001.appspot.com/o/studio%2Fuser%2Fz5t3o1n349%2F205f013d-5b32-47ed-b36d-9993322a36b3.webp?alt=media&token=c1aa5610-d88e-4a6c-bc05-b44c01740924",
         imageHint: 'dessert cake',
         isListed: true,
+        ownerId: 'user-1'
     },
     {
         id: 'auction-4',
@@ -204,10 +217,12 @@ export const auctionNfts: Nft[] = [
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/app-interact-dev-001.appspot.com/o/studio%2Fuser%2Fz5t3o1n349%2F16a3f124-768a-49f8-8aa0-9c29806443c2.webp?alt=media&token=d1ed16f7-b7d1-447a-8b9a-7c989104085b",
         imageHint: 'noodle bowl',
         isListed: true,
+        ownerId: 'user-2'
     }
 ];
 
 export const user: User = {
+  id: 'user-1',
   username: 'Foydalanuvchi',
   name: 'R/B',
   avatarUrl: getImage('userAvatar').url,
