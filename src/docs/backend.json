@@ -1,0 +1,82 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "User Account",
+      "description": "Represents a user's account within the TON Gift Marketplace.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user account, matching Firebase Auth UID."
+        },
+        "telegramId": {
+          "type": "string",
+          "description": "The user's Telegram ID."
+        },
+        "username": {
+          "type": "string",
+          "description": "User's chosen username (e.g., from Telegram)."
+        },
+        "balance": {
+          "type": "number",
+          "description": "User's account balance in UZS."
+        }
+      },
+      "required": ["id", "telegramId", "username", "balance"]
+    },
+    "NftGift": {
+      "title": "NFT Gift",
+      "description": "Represents an NFT gift owned by a user or listed on the marketplace/auction.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "lottieUrl": { "type": "string", "format": "uri" },
+        "isListed": { "type": "boolean" },
+        "price": { "type": "number" },
+        "rarity": { "type": "string" },
+        "collection": { "type": "string" },
+        "ownerId": { "type": "string", "description": "Firebase Auth UID of the owner." },
+        "startTime": { "type": "number", "description": "Auction start timestamp." },
+        "endTime": { "type": "number", "description": "Auction end timestamp." },
+        "startingPrice": { "type": "number" },
+        "highestBid": { "type": "number" },
+        "highestBidderId": { "type": "string", "description": "Firebase Auth UID of the highest bidder." }
+      },
+      "required": ["id", "name", "imageUrl", "isListed"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous"]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserAccount",
+          "schema": { "$ref": "#/entities/UserAccount" },
+          "description": "Stores all data for a single user, including their profile and settings. The document ID must match the Firebase Auth UID."
+        }
+      },
+      {
+        "path": "/users/{userId}/inventory/{nftId}",
+        "definition": {
+          "entityName": "NftGift",
+          "schema": { "$ref": "#/entities/NftGift" },
+          "description": "Stores the NFT gifts that a user owns in their inventory. This is a subcollection of the user's document."
+        }
+      },
+      {
+        "path": "/auctions/{auctionId}",
+        "definition": {
+          "entityName": "NftGift",
+          "schema": { "$ref": "#/entities/NftGift" },
+          "description": "Stores all currently active auctions. The document ID is the same as the NFT ID."
+        }
+      }
+    ]
+  }
+}

@@ -1,4 +1,3 @@
-
 import { PlaceHolderImages } from './placeholder-images';
 
 export interface UserAccount {
@@ -24,6 +23,7 @@ export interface Nft {
   
   // Auction fields
   highestBid?: number;
+  highestBidderId?: string; // ID of the user with the highest bid
   endTime?: number;
   startTime?: number;
   startingPrice?: number;

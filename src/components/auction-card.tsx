@@ -15,6 +15,7 @@ import { Tag, Timer } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { useState, useEffect } from 'react';
 import { LottiePlayer } from './lottie-player';
+import { useNft } from '@/context/nft-context';
 
 interface AuctionCardProps {
   nft: Nft;
@@ -22,6 +23,7 @@ interface AuctionCardProps {
 
 export function AuctionCard({ nft }: AuctionCardProps) {
   const { translations } = useLanguage();
+  const { placeBid } = useNft();
   const t = (key: string, params?: { [key: string]: string | number }) => {
     let translation = translations[key] || key;
     if (params) {
@@ -70,6 +72,10 @@ export function AuctionCard({ nft }: AuctionCardProps) {
   const bidAmount = (nft.highestBid || 0) * 1.05;
   const nftIdNumber = nft.id.split('-').pop();
 
+  const handlePlaceBid = () => {
+    placeBid(nft, bidAmount);
+  };
+
   return (
     <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
@@ -96,7 +102,7 @@ export function AuctionCard({ nft }: AuctionCardProps) {
             <span className="text-sm text-muted-foreground">{t('highestBid')}</span>
             <div className="flex items-center gap-2 text-primary font-bold text-lg">
                 <Tag className="w-4 h-4 text-accent" />
-                <span>{nft.highestBid} UZS</span>
+                <span>{nft.highestBid?.toLocaleString()} UZS</span>
             </div>
         </div>
          <div className="flex justify-between items-center text-sm text-muted-foreground">
@@ -111,7 +117,7 @@ export function AuctionCard({ nft }: AuctionCardProps) {
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full font-bold">{t('placeBid')} {bidAmount.toFixed(2)} UZS</Button>
+        <Button className="w-full font-bold" onClick={handlePlaceBid}>{t('placeBid')} {bidAmount.toFixed(0)} UZS</Button>
       </CardFooter>
     </Card>
   );

@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import type { Nft, User } from '@/lib/data';
+import type { Nft } from '@/lib/data';
 import { Button } from './ui/button';
 import {
   Card,
@@ -39,10 +39,7 @@ import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
 import { LottiePlayer } from './lottie-player';
-import { useFirestore, useUser } from '@/firebase';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, doc } from 'firebase/firestore';
-
+import { useUser } from '@/firebase';
 
 interface NftCardProps {
   nft: Nft;
@@ -51,9 +48,8 @@ interface NftCardProps {
 
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const { translations } = useLanguage();
-  const { setNftStatus, removeNftFromInventory, addNftToAuctions } = useNft();
+  const { setNftStatus, removeNftFromInventory, addNftToAuctions, buyNft } = useNft();
   const { user: currentUser } = useUser();
-  const firestore = useFirestore();
   const { toast } = useToast();
 
   const [price, setPrice] = useState('');
@@ -73,6 +69,10 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       });
     }
     return translation;
+  };
+
+  const handleBuy = () => {
+    buyNft(nft);
   };
 
   const handleSell = () => {
@@ -135,6 +135,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         price: startingPrice, // Starting price
         startingPrice: startingPrice,
         highestBid: startingPrice,
+        highestBidderId: '',
         startTime,
         endTime,
     };
@@ -163,7 +164,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       {isOwner ? (
         <Button disabled className="w-full font-bold">{t('youAreOwner')}</Button>
       ) : (
-        <Button className="w-full font-bold">{t('buy')}</Button>
+        <Button className="w-full font-bold" onClick={handleBuy}>{t('buy')}</Button>
       )}
     </>
   );
@@ -215,30 +216,32 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         </Dialog>
       )}
       {/* Auction Dialogs */}
-      <Dialog open={isAuctionStep1Open} onOpenChange={setIsAuctionStep1Open}>
-        <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">{t('auction')}</Button>
-        </DialogTrigger>
-        <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Auksionga qo'yish</DialogTitle>
-              <DialogDescription>Auksion parametrlarini kiriting.</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="duration" className="text-right">Davomiyligi (soat)</Label>
-                <Input id="duration" type="number" value={auctionDuration} onChange={(e) => setAuctionDuration(e.target.value)} className="col-span-3" />
+      {!nft.isListed && (
+        <Dialog open={isAuctionStep1Open} onOpenChange={setIsAuctionStep1Open}>
+          <DialogTrigger asChild>
+              <Button variant="outline" className="w-full">{t('auction')}</Button>
+          </DialogTrigger>
+          <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Auksionga qo'yish</DialogTitle>
+                <DialogDescription>Auksion parametrlarini kiriting.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="duration" className="text-right">Davomiyligi (soat)</Label>
+                  <Input id="duration" type="number" value={auctionDuration} onChange={(e) => setAuctionDuration(e.target.value)} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="start-price" className="text-right">Boshlang'ich narx (UZS)</Label>
+                  <Input id="start-price" type="number" value={auctionStartPrice} onChange={(e) => setAuctionStartPrice(e.target.value)} className="col-span-3" />
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="start-price" className="text-right">Boshlang'ich narx (UZS)</Label>
-                <Input id="start-price" type="number" value={auctionStartPrice} onChange={(e) => setAuctionStartPrice(e.target.value)} className="col-span-3" />
-              </div>
-            </div>
-            <DialogFooter>
-                <Button onClick={handleProceedToAuctionStep2}>Keyingisi</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <DialogFooter>
+                  <Button onClick={handleProceedToAuctionStep2}>Keyingisi</Button>
+              </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
        <AlertDialog open={isAuctionStep2Open} onOpenChange={setIsAuctionStep2Open}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -316,7 +319,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         {cardContent}
       </DialogTrigger>
       <DialogContent className="max-w-md p-0">
-        <NftDetailDialog nft={nft} />
+        <NftDetailDialog nft={nft} action={action} />
       </DialogContent>
     </Dialog>
   );

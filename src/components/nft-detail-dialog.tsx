@@ -9,13 +9,19 @@ import { Tag, Send, BarChart, Share2, Diamond } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { DialogHeader, DialogTitle } from './ui/dialog';
 import { LottiePlayer } from './lottie-player';
+import { useNft } from '@/context/nft-context';
+import { useUser } from '@/firebase';
 
 interface NftDetailDialogProps {
   nft: Nft;
+  action?: 'buy' | 'manage';
 }
 
-export function NftDetailDialog({ nft }: NftDetailDialogProps) {
+export function NftDetailDialog({ nft, action = 'buy' }: NftDetailDialogProps) {
   const { translations } = useLanguage();
+  const { buyNft } = useNft();
+  const { user: currentUser } = useUser();
+  
   const t = (key: string, params?: { [key: string]: any }) => {
     let translation = translations[key] || key;
     if (params) {
@@ -26,6 +32,10 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
     return translation;
   };
 
+  const handleBuy = () => {
+    buyNft(nft);
+  };
+  
   const handleWatch = () => {
     // Creates a PascalCase version of the ID, e.g., "ice-cream-1" -> "IceCream-1"
     const nftLinkID = nft.id
@@ -68,6 +78,7 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
   );
 
   const nftIdNumber = nft.id.split('-').pop();
+  const isOwner = currentUser && nft.ownerId === currentUser.uid;
 
   return (
     <div className="bg-card text-card-foreground">
@@ -124,10 +135,16 @@ export function NftDetailDialog({ nft }: NftDetailDialogProps) {
             <p className="text-sm font-semibold text-green-400">{t('commissionPeriod')}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="lg">{t('makeAnOffer')}</Button>
-            <Button size="lg" className="font-bold">{t('buy')}</Button>
-        </div>
+        { action === 'buy' && (
+             <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="lg">{t('makeAnOffer')}</Button>
+                {isOwner ? (
+                     <Button size="lg" className="font-bold" disabled>{t('youAreOwner')}</Button>
+                ) : (
+                     <Button size="lg" className="font-bold" onClick={handleBuy}>{t('buy')}</Button>
+                )}
+            </div>
+        )}
       </div>
     </div>
   );
