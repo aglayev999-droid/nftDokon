@@ -24,8 +24,14 @@ export default function InventoryPage() {
   const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
   const { translations } = useLanguage();
 
-  const t = (key: string) => {
-    return translations[key] || key;
+  const t = (key: string, params?: { [key: string]: any }) => {
+    let translation = translations[key] || key;
+    if (params) {
+        Object.keys(params).forEach(param => {
+            translation = translation.replace(`{${param}}`, params[param]);
+        });
+    }
+    return translation;
   };
 
   const listedNfts = nfts.filter((nft) => nft.isListed);
@@ -65,7 +71,7 @@ export default function InventoryPage() {
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {nftList.map((nft) => (
           <div
             key={nft.id}
@@ -154,7 +160,7 @@ export default function InventoryPage() {
 
         <TabsContent value="all">
           {nfts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               {nfts.map((nft) => <NftCard key={nft.id} nft={nft} action="manage" />)}
             </div>
           ) : (
@@ -167,7 +173,7 @@ export default function InventoryPage() {
         </TabsContent>
         <TabsContent value="listed">
           {listedNfts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                {listedNfts.map((nft) => <NftCard key={nft.id} nft={nft} action="manage" />)}
             </div>
           ) : (
@@ -180,7 +186,7 @@ export default function InventoryPage() {
         </TabsContent>
         <TabsContent value="unlisted">
            {unlistedNfts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                 {unlistedNfts.map((nft) => <NftCard key={nft.id} nft={nft} action="manage" />)}
             </div>
           ) : (

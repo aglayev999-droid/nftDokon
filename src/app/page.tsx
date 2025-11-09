@@ -178,7 +178,7 @@ export default function MarketplacePage() {
             </div>
           </div>
           {listedNfts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {listedNfts.map((nft) => (
                   <NftCard key={nft.id} nft={nft} />
                 ))}
