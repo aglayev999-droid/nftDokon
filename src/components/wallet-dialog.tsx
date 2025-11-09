@@ -87,10 +87,6 @@ export function WalletDialog() {
                     <Label htmlFor="cardExpiry">{t('cardExpiry')}</Label>
                     <Input id="cardExpiry" placeholder="MM/YY" value={cardExpiry} onChange={handleCardExpiryChange} />
                   </div>
-                   <div className="space-y-2">
-                    <Label htmlFor="cardHolder">{t('cardHolder')}</Label>
-                    <Input id="cardHolder" placeholder={t('autoFilled')} disabled />
-                  </div>
                   <Button className="w-full">{t('connectCard')}</Button>
                 </div>
               </DialogContent>
