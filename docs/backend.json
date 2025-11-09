@@ -1,14 +1,13 @@
 {
   "entities": {
     "UserAccount": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserAccount",
-      "type": "object",
+      "title": "User Account",
       "description": "Represents a user's account within the TON Gift Marketplace.",
+      "type": "object",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user account."
+          "description": "Unique identifier for the user account, matching Firebase Auth UID."
         },
         "telegramId": {
           "type": "string",
@@ -16,69 +15,23 @@
         },
         "username": {
           "type": "string",
-          "description": "User's chosen username (e.g., Azico_uzb)."
+          "description": "User's chosen username (e.g., from Telegram)."
         },
         "balance": {
           "type": "number",
-          "description": "User's account balance."
-        },
-        "volume": {
-          "type": "number",
-          "description": "User's trading volume on the marketplace."
-        },
-        "boughtStats": {
-          "type": "number",
-          "description": "Statistics on items bought by the user."
-        },
-        "soldStats": {
-          "type": "number",
-          "description": "Statistics on items sold by the user."
-        },
-        "cashbackBonus": {
-          "type": "number",
-          "description": "User's accumulated cashback bonus."
-        },
-        "seasonAchievements": {
-          "type": "string",
-          "description": "User's achievements within seasonal events."
-        },
-        "giveaways": {
-          "type": "number",
-          "description": "Number of giveaways participated in or won by the user."
-        },
-        "portalsLevel": {
-          "type": "number",
-          "description": "User's level within portal features."
-        },
-        "referralLink": {
-          "type": "string",
-          "description": "The referral link associated to the user.",
-          "format": "uri"
-        },
-        "friendsVolume": {
-          "type": "number",
-          "description": "Aggregate volume of the user's referred friends."
+          "description": "User's account balance in UZS."
         }
       },
-      "required": [
-        "id",
-        "telegramId",
-        "username"
-      ]
+      "required": ["id", "telegramId", "username", "balance"]
     },
     "NftGift": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "NftGift",
+      "title": "NFT Gift",
+      "description": "Represents an NFT gift owned by a user in their inventory.",
       "type": "object",
-      "description": "Represents an NFT gift owned by a user.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the NFT gift."
-        },
-        "ownerId": {
-          "type": "string",
-          "description": "Reference to UserAccount. (Relationship: UserAccount 1:N NftGift)"
         },
         "name": {
           "type": "string",
@@ -93,49 +46,28 @@
           "description": "URL of the NFT gift's image.",
           "format": "uri"
         },
-        "listingStatus": {
-          "type": "string",
-          "description": "Current listing status of the NFT (e.g., Unlisted, Listed)."
+        "isListed": {
+          "type": "boolean",
+          "description": "Indicates if the NFT is listed for sale on the marketplace."
         },
         "price": {
           "type": "number",
-          "description": "Price of the NFT gift (if listed)."
+          "description": "Price of the NFT gift in UZS (if listed)."
         },
         "rarity": {
           "type": "string",
           "description": "Rarity of the NFT gift."
         },
-        "giftType": {
-          "type": "string",
-          "description": "Type of the NFT gift."
-        },
         "collection": {
           "type": "string",
-          "description": "Collection of the NFT gift."
-        },
-        "model": {
-          "type": "string",
-          "description": "Model of the NFT gift."
-        },
-        "background": {
-          "type": "string",
-          "description": "Background of the NFT gift."
+          "description": "The collection to which the NFT gift belongs."
         }
       },
-      "required": [
-        "id",
-        "ownerId",
-        "name",
-        "description",
-        "imageUrl"
-      ]
+      "required": ["id", "name", "imageUrl", "isListed"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["anonymous"]
   },
   "firestore": {
     "structure": [
@@ -143,39 +75,18 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "UserAccount",
-          "schema": {
-            "$ref": "#/backend/entities/UserAccount"
-          },
-          "description": "Stores user account information. Uses path-based ownership for easy authorization.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "schema": { "$ref": "#/entities/UserAccount" },
+          "description": "Stores all data for a single user, including their profile and settings. The document ID must match the Firebase Auth UID."
         }
       },
       {
-        "path": "/users/{userId}/nft_gifts/{giftId}",
+        "path": "/users/{userId}/inventory/{nftId}",
         "definition": {
           "entityName": "NftGift",
-          "schema": {
-            "$ref": "#/backend/entities/NftGift"
-          },
-          "description": "Stores NFT gifts owned by a user. Path-based ownership ensures authorization independence, as the user ID is present in the path, eliminating the need for 'get()' calls in security rules.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user who owns the NFT gift."
-            },
-            {
-              "name": "giftId",
-              "description": "The unique identifier for the NFT gift."
-            }
-          ]
+          "schema": { "$ref": "#/entities/NftGift" },
+          "description": "Stores the NFT gifts that a user owns in their inventory. This is a subcollection of the user's document."
         }
       }
-    ],
-    "reasoning": "This Firestore structure is designed to manage user accounts and their associated NFT gifts for the TON Gift Marketplace. It prioritizes authorization independence and supports the required QAPs through structural segregation and path-based ownership. Each user has their own dedicated space for their account and NFT gifts, ensuring clear ownership and simplified security rules.\n\n**Authorization Independence:** Authorization Independence is achieved via Path-Based Ownership. NFT Gifts are stored in subcollections under each user's document (`/users/{userId}/nft_gifts/{giftId}`), eliminating the need for `get()` calls to parent documents to verify ownership. This allows atomic operations on NFTs without relying on the parent UserAccount document's data.\n\n**QAPs Support:**\n*   **Secure List Operations:** Path-based ownership enables secure listing. Rules can easily restrict access to a user's gifts based on the `userId` in the path without needing to filter based on document content.\n\n*   **Segregation of Data:** Storing user-specific data (account details and NFT gifts) under `/users/{userId}` ensures that each user's data is isolated and has its own security context. This segregation makes it easy to apply specific rules to user-owned data."
+    ]
   }
 }
