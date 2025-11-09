@@ -32,8 +32,8 @@ export default function RootLayout({
   return (
     <LanguageProvider>
       <TelegramUserProvider>
-        <WalletProvider>
-          <FirebaseClientProvider>
+        <FirebaseClientProvider>
+          <WalletProvider>
             <NftProvider>
               <html lang="uz">
                 <head>
@@ -63,8 +63,8 @@ export default function RootLayout({
                 </body>
               </html>
             </NftProvider>
-          </FirebaseClientProvider>
-        </WalletProvider>
+          </WalletProvider>
+        </FirebaseClientProvider>
       </TelegramUserProvider>
     </LanguageProvider>
   );

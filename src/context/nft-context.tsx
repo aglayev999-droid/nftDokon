@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, {
@@ -52,7 +53,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const { data: nftsFromDb, isLoading: isCollectionLoading } =
     useCollection<Nft>(inventoryRef);
 
-  // Effect to bootstrap user data and inventory
+  // Effect to bootstrap user data if it doesn't exist
   useEffect(() => {
     if (!userId || !telegramUser || isFirebaseUserLoading || isTelegramUserLoading || !firestore) {
       return;
@@ -69,24 +70,15 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
                 id: userId,
                 telegramId: String(telegramUser.id),
                 username: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-                balance: 1000000,
+                balance: 1000000, // Generous starting balance for testing
             };
             transaction.set(userDocRef, newUserAccount);
-            // We can't setBalance here directly as it's outside React's render cycle for this transaction
         }
-    }).then(() => {
-        // After transaction, re-fetch or assume bootstrap values for immediate UI update
-        getDoc(userDocRef).then(docSnap => {
-            if (docSnap.exists()) {
-                const userData = docSnap.data() as UserAccount;
-                setBalance(userData.balance || 0);
-            }
-        });
     }).catch(error => {
         console.error("Error bootstrapping user:", error);
     });
 
-  }, [userId, telegramUser, firestore, isFirebaseUserLoading, isTelegramUserLoading, setBalance]);
+  }, [userId, telegramUser, firestore, isFirebaseUserLoading, isTelegramUserLoading]);
 
 
   const setNftStatus = (nftId: string, isListed: boolean, price?: number) => {
@@ -205,15 +197,14 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(result.error || 'An unknown error occurred.');
       }
       
-      // Optimistically update the client-side balance
-      setBalance(prev => prev - nft.price);
+      // The wallet context will automatically update the balance via its own Firestore listener.
+      // No need to manually setBalance here.
 
       toast({ title: "Purchase successful!", description: `You bought ${nft.name}.` });
       
       // The real-time listeners for the marketplace/inventory will handle showing/hiding the NFT automatically.
     
     } catch (error: any) {
-        // We can check if this is a permission error from our API, but for now, just show the message.
         console.error("Purchase failed:", error);
         toast({ variant: "destructive", title: "Purchase Failed", description: error.message });
     }
