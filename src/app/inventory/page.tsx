@@ -118,6 +118,8 @@ export default function InventoryPage() {
                 <AlertDialogTitle>{t('addNft')}</AlertDialogTitle>
                 <AlertDialogDescription>
                   {t('addNftDescription')}
+                  <br/><br/>
+                  Test uchun: botga `add moon-pendant-2075` deb yozib yuboring.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
