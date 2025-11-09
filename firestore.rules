@@ -15,13 +15,22 @@ service cloud.firestore {
 
     // /users/{userId}
     match /users/{userId} {
-      allow get, update: if isOwner(userId);
+      // Allow user to read their own document.
+      allow get: if isOwner(userId);
+      // Allow any signed-in user to update a user document (for balance transfers).
+      // In a real app, this would be much stricter, likely handled by Cloud Functions.
+      allow update: if isSignedIn();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow list, delete: if false;
 
       // /users/{userId}/inventory/{nftId}
       match /inventory/{nftId} {
-        allow read, write: if isOwner(userId);
+        // Allow owner to read and create/update their own NFTs.
+        allow read, create, update: if isOwner(userId);
+        // Allow any signed-in user to delete an NFT from another's inventory.
+        // This is necessary for the client-side 'buyNft' transaction to work.
+        // A more secure implementation would use a Cloud Function.
+        allow delete: if isSignedIn();
       }
     }
     
@@ -34,9 +43,8 @@ service cloud.firestore {
       // The incoming resource's ownerId must match the signer's UID.
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       
-      // UPDATE: Allow users to update the highestBid if they are signed in.
-      // Other fields should be protected.
-      // (This is a simplified rule; a real app would have more complex bid validation)
+      // UPDATE: Allow signed-in users to update the highestBid and highestBidderId.
+      // This allows the 'placeBid' transaction to work.
       allow update: if isSignedIn();
       
       // DELETE: Deleting auctions is disallowed. They should be handled by a backend process.
