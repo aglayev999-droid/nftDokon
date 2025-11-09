@@ -1,4 +1,3 @@
-
 'use client';
 import {
   AlertDialog,
@@ -97,6 +96,8 @@ export default function InventoryPage() {
     );
   };
 
+  const withdrawableNfts = nfts.filter(nft => !nft.isListed);
+
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -139,7 +140,7 @@ export default function InventoryPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
-                {renderNftGrid(nfts, true)}
+                {renderNftGrid(withdrawableNfts, true)}
               </div>
               <DialogFooter>
                 <DialogClose asChild>

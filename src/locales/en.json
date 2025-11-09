@@ -46,7 +46,7 @@
   "understood": "Understood",
   "withdrawNft": "Withdraw NFT",
   "withdrawNfts": "Withdraw NFTs",
-  "selectNftsToWithdraw": "Select the NFTs you want to withdraw.",
+  "selectNftsToWithdraw": "Select the NFTs you want to withdraw. NFTs currently on sale cannot be withdrawn.",
   "withdrawNSelected": "Withdraw {count} NFT(s)",
   "all": "All",
   "listed": "Listed",

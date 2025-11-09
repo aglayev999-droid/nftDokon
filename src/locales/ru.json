@@ -46,7 +46,7 @@
   "understood": "Понятно",
   "withdrawNft": "Вывести NFT",
   "withdrawNfts": "Вывести NFT",
-  "selectNftsToWithdraw": "Выберите NFT, которые хотите вывести.",
+  "selectNftsToWithdraw": "Выберите NFT, которые хотите вывести. NFT, выставленные на продажу, вывести нельзя.",
   "withdrawNSelected": "Вывести {count} NFT",
   "all": "Все",
   "listed": "В продаже",

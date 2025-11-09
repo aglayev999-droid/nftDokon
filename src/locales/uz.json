@@ -46,7 +46,7 @@
   "understood": "Tushunarli",
   "withdrawNft": "NFTni yechib olish",
   "withdrawNfts": "NFTlarni yechib olish",
-  "selectNftsToWithdraw": "Yechib olmoqchi bo'lgan NFTlaringizni tanlang.",
+  "selectNftsToWithdraw": "Yechib olmoqchi bo'lgan NFTlaringizni tanlang. Sotuvda bo'lgan NFTlarni yechib bo'lmaydi.",
   "withdrawNSelected": "{count} ta NFT yechish",
   "all": "Barchasi",
   "listed": "Sotuvda",
