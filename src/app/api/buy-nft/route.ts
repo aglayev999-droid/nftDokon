@@ -53,12 +53,14 @@ export async function POST(request: NextRequest) {
         
         // 2. Credit seller
         transaction.update(sellerRef, { balance: admin.firestore.FieldValue.increment(nftData.price) });
+        
+        // 3. Prepare new NFT data for the buyer
+        const newNftData = { ...nftData, ownerId: buyerId, isListed: false, price: 0 };
 
-        // 3. Move the NFT: delete from seller's inventory
+        // 4. Move the NFT: delete from seller's inventory
         transaction.delete(originalNftRef);
         
-        // 4. Move the NFT: create in buyer's inventory
-        const newNftData = { ...nftData, ownerId: buyerId, isListed: false, price: 0 };
+        // 5. Move the NFT: create in buyer's inventory
         transaction.set(newNftRef, newNftData);
     });
     
