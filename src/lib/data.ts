@@ -23,6 +23,7 @@ export interface Achievement {
 
 export interface User {
   username: string;
+  name: string;
   avatarUrl: string;
   avatarHint: string;
   volume: number;
@@ -120,6 +121,7 @@ export const auctionNfts: Nft[] = [
 
 export const user: User = {
   username: 'Foydalanuvchi',
+  name: 'R/B',
   avatarUrl: getImage('userAvatar').url,
   avatarHint: getImage('userAvatar').hint,
   volume: 0,
