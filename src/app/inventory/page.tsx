@@ -8,6 +8,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { NftCard } from '@/components/nft-card';
@@ -118,7 +119,7 @@ export default function InventoryPage() {
     } catch (error) {
          console.error("Error creating withdrawal request:", error);
          toast({
-            variant: 'destructive',
+            variant: "destructive",
             title: "Xatolik",
             description: "So'rovni yuborishda xatolik yuz berdi. Iltimos, keyinroq yana urinib ko'ring.",
         });
