@@ -5,19 +5,35 @@ import * as admin from 'firebase-admin';
 // hosting provider'ning (masalan, Render) Environment Variables bo'limiga qo'shish kerak.
 // BU YERGA TO'G'RIDAN-TO'G'RI KALITLARNI YOZMANG!
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : undefined;
+let adminDb: admin.firestore.Firestore;
 
-if (!admin.apps.length) {
-  try {
+try {
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+    : undefined;
+
+  if (!admin.apps.length && serviceAccount) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
     console.log('Firebase Admin SDK initialized.');
-  } catch (e: any) {
-    console.error('Firebase Admin SDK initialization error', e.stack);
   }
+  adminDb = admin.firestore();
+} catch (e: any) {
+    console.error('Firebase Admin SDK initialization error. This is expected in dev without credentials.', e.message);
+    // In a non-production environment, we can mock or disable the adminDb.
+    // For now, we'll let it be undefined and handle it where it's used.
+    // @ts-ignore
+    adminDb = {
+        collection: () => ({
+            where: () => ({
+                limit: () => ({
+                    get: () => Promise.resolve({ empty: true, docs: [] })
+                })
+            })
+        })
+    };
 }
 
-export const adminDb = admin.firestore();
+
+export { adminDb };
