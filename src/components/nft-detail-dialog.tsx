@@ -70,12 +70,15 @@ export function NftDetailDialog({ nft, action = 'buy' }: NftDetailDialogProps) {
     }
   };
 
-  const detailRow = (label: string, value: string) => (
-    <div className="flex justify-between items-center text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold text-foreground">{value}</span>
-    </div>
-  );
+  const detailRow = (label: string, value: string | undefined) => {
+    if (!value) return null;
+    return (
+        <div className="flex justify-between items-center text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-semibold text-foreground">{value}</span>
+        </div>
+    );
+  };
 
   const nftIdNumber = nft.id.split('-').pop();
   const isOwner = currentUser && nft.ownerId === currentUser.uid;
@@ -124,6 +127,7 @@ export function NftDetailDialog({ nft, action = 'buy' }: NftDetailDialogProps) {
         <div className="space-y-2">
             {detailRow(t('collection'), nft.collection)}
             {detailRow(t('model'), nft.model)}
+            {detailRow('Symbol', nft.symbol)}
             {detailRow(t('rarity'), nft.rarity)}
             {detailRow(t('background'), nft.background)}
         </div>

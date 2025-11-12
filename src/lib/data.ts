@@ -13,8 +13,9 @@ export interface Nft {
   price: number;
   rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
   collection: 'Crypto Critters' | 'Pixel Presents' | 'TON Treasures' | 'Plush Pepe';
-  model: 'Common' | 'Rare' | 'Epic';
-  background: 'Space' | 'Neon' | 'Holographic' | 'Rainbow';
+  model: 'Common' | 'Rare' | 'Epic' | 'pumpkin'; // Updated model
+  background: 'Space' | 'Neon' | 'Holographic' | 'Rainbow' | 'onyx black'; // Updated background
+  symbol?: 'illuminati' | string; // New field for symbol
   imageUrl: string;
   lottieUrl?: string;
   imageHint: string;
@@ -36,8 +37,9 @@ export const nftsData: Nft[] = [
         price: 0, // Not listed for sale initially
         rarity: 'Rare',
         collection: 'Plush Pepe',
-        model: 'Rare',
-        background: 'Holographic',
+        model: 'pumpkin',
+        background: 'onyx black',
+        symbol: 'illuminati',
         imageUrl: 'https://nft.fragment.com/gift/plushpepe-1.png',
         lottieUrl: 'https://nft.fragment.com/gift/plushpepe-1.tgs',
         imageHint: 'cartoon frog',

@@ -127,5 +127,6 @@
   "cancel": "Cancel",
   "confirm": "Confirm",
   "unlistSuccessTitle": "NFT Unlisted",
-  "unlistSuccessDescription": "{nftName} has been removed from the marketplace."
+  "unlistSuccessDescription": "{nftName} has been removed from the marketplace.",
+  "symbol": "Symbol"
 }

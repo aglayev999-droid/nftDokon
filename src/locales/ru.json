@@ -127,5 +127,6 @@
   "cancel": "Отмена",
   "confirm": "Подтвердить",
   "unlistSuccessTitle": "NFT снят с продажи",
-  "unlistSuccessDescription": "{nftName} был убран с рынка."
+  "unlistSuccessDescription": "{nftName} был убран с рынка.",
+  "symbol": "Символ"
 }
