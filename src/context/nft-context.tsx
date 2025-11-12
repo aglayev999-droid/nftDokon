@@ -9,7 +9,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { Nft, UserAccount } from '@/lib/data';
+import { Nft, UserAccount, nftsData as initialNfts } from '@/lib/data';
 import {
   useFirestore,
   useUser,
@@ -18,7 +18,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, writeBatch, runTransaction, getDoc, Transaction } from 'firebase/firestore';
+import { collection, doc, writeBatch, runTransaction, getDoc, Transaction, getDocs } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
@@ -53,29 +53,42 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const { data: nftsFromDb, isLoading: isCollectionLoading } =
     useCollection<Nft>(inventoryRef);
 
-  // Effect to bootstrap user data if it doesn't exist
+  // Effect to bootstrap user data and initial NFTs
   useEffect(() => {
     if (!userId || !telegramUser || isFirebaseUserLoading || isTelegramUserLoading || !firestore) {
       return;
     }
 
     const userDocRef = doc(firestore, 'users', userId);
+    const userInventoryRef = collection(userDocRef, 'inventory');
 
     runTransaction(firestore, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
+        
+        // Bootstrap user account if it doesn't exist
         if (!userDoc.exists()) {
             console.log(`User document for ${userId} does not exist, bootstrapping...`);
-
             const newUserAccount: UserAccount = {
                 id: userId,
                 telegramId: String(telegramUser.id),
                 username: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-                balance: 1000000, // Generous starting balance for testing
+                balance: 1000000, // Generous starting balance
             };
             transaction.set(userDocRef, newUserAccount);
         }
+
+        // Check if inventory is empty, if so, add initial NFTs
+        const inventorySnapshot = await getDocs(userInventoryRef);
+        if (inventorySnapshot.empty) {
+            console.log(`Inventory for user ${userId} is empty, adding initial NFTs.`);
+            initialNfts.forEach(nft => {
+                const newNftRef = doc(userInventoryRef, nft.id);
+                // Assign the current user as the owner
+                transaction.set(newNftRef, { ...nft, ownerId: userId });
+            });
+        }
     }).catch(error => {
-        console.error("Error bootstrapping user:", error);
+        console.error("Error bootstrapping user or inventory:", error);
     });
 
   }, [userId, telegramUser, firestore, isFirebaseUserLoading, isTelegramUserLoading]);
