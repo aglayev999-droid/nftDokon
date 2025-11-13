@@ -21,14 +21,14 @@ export interface Nft {
   price: number;
   rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
   collection: 'Crypto Critters' | 'Pixel Presents' | 'TON Treasures' | 'Plush Pepe' | 'Fresh Socks';
-  model: 'Common' | 'Rare' | 'Epic' | 'pumpkin'; // Updated model
-  background: 'Space' | 'Neon' | 'Holographic' | 'Rainbow' | 'onyx black'; // Updated background
-  symbol?: 'illuminati' | string; // New field for symbol
-  imageUrl: string;
+  model: 'Common' | 'Rare' | 'Epic' | 'pumpkin';
+  background: 'Space' | 'Neon' | 'Holographic' | 'Rainbow' | 'onyx black';
+  symbol?: 'illuminati' | string;
   lottieUrl?: string;
   imageHint: string;
   isListed: boolean;
-  ownerId?: string; // kim egalik qilishi
+  ownerId?: string;
+  giftUid?: string; // The unique ID of the gift from Telegram, used for withdrawal
   
   // Auction fields
   highestBid?: number;

@@ -80,7 +80,6 @@ function deleteGiftFromDb(id: number): Promise<void> {
                  return reject(new Error(`Failed to delete row from SQLite DB: ${err.message}`));
             }
             if (this.changes === 0) {
-                 // This is not a critical error, just a log.
                  console.warn(`Row with id ${id} not found in SQLite DB for deletion.`);
             } else {
                 console.log(`Successfully deleted row ${id} from mon.db`);
@@ -122,7 +121,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Prepare the NFT data for Firestore
-    const newNftId = `tg-${latestGift.gift_uid}`;
+    const newNftId = `tg-${latestGift.gift_uid.substring(0, 12)}`; // Use part of the unique gift ID for the document ID
     const inventoryItemRef = adminDb.doc(`users/${userId}/inventory/${newNftId}`);
     
     const docSnapshot = await inventoryItemRef.get();
@@ -157,13 +156,12 @@ export async function POST(request: NextRequest) {
     } else if (nftName.toLowerCase().includes('fresh socks')) {
         if (nftNum === '1111') {
             rarity = 'Rare';
-            model = 'Rare'; // Or whatever is appropriate
+            model = 'Rare'; 
             background = 'Holographic';
         }
     }
 
-    // General rules based on model name if not overridden
-    if (rarity === 'Common') { // Only if not already set by specific rules
+    if (rarity === 'Common') { 
         if (model?.toLowerCase().includes('legendary')) rarity = 'Legendary';
         else if (model?.toLowerCase().includes('epic')) rarity = 'Epic';
         else if (model?.toLowerCase().includes('rare')) rarity = 'Rare';
@@ -171,20 +169,21 @@ export async function POST(request: NextRequest) {
     // --- End of property determination ---
 
     const slug = nftName.toLowerCase().replace(/\s+/g, '');
+    const lottieUrl = nftNum ? `https://nft.fragment.com/gift/${slug}-${nftNum}.tgs` : `https://nft.fragment.com/gift/${slug}.tgs`;
 
     const newNftData: Omit<Nft, 'id'> = {
         name: `${nftName} #${nftNum}`,
-        price: 0, // Not for sale by default
+        price: 0,
         rarity: rarity,
-        collection: 'TON Treasures', // Can be improved
+        collection: 'TON Treasures',
         model: model as Nft['model'],
         background: background as Nft['background'],
         symbol: symbol,
-        imageUrl: `https://nft.fragment.com/gift/${slug}-${nftNum}.png`,
-        lottieUrl: `https://nft.fragment.com/gift/${slug}-${nftNum}.tgs`,
+        lottieUrl: lottieUrl,
         imageHint: 'telegram gift',
         isListed: false,
         ownerId: userId,
+        giftUid: latestGift.gift_uid, // Save the unique gift ID for withdrawal
     };
     
     // 4. Add the NFT to the user's inventory in Firestore

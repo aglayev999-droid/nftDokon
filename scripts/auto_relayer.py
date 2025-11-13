@@ -1,5 +1,4 @@
 
-import json
 import asyncio
 import sys
 import os
@@ -14,7 +13,6 @@ api_id = os.getenv("TELEGRAM_API_ID")
 api_hash = os.getenv("TELEGRAM_API_HASH")
 
 session_file = "owner.session"
-gift_db_file = "savegifts.json"
 
 if not api_id or not api_hash:
     print("XATOLIK: .env faylida TELEGRAM_API_ID va TELEGRAM_API_HASH o'zgaruvchilarini sozlang.")
@@ -22,88 +20,63 @@ if not api_id or not api_hash:
 
 client = TelegramClient(session_file, int(api_id), api_hash)
 
-
-async def fetch_real_saved_gifts():
-    """Telegramdan real saqlangan gifts ro'yxatini olish"""
-    try:
-        result = await client(functions.payments.GetUserStarGiftsRequest())
-
-        gifts = []
-        for g in result.gifts:
-            gifts.append({
-                "msg_id": g.id,
-                "title": g.title
-            })
-
-        # Faylga saqlash
-        with open(gift_db_file, "w", encoding="utf-8") as f:
-            json.dump(gifts, f, ensure_ascii=False, indent=4)
-
-        print(f"✅ {len(gifts)} ta REAL gift olindi va saqlandi!")
-        return gifts
-
-    except Exception as e:
-        print("❌ Giftlarni olishda xato:", e)
-        return []
-
-
-async def load_saved_gifts():
-    """JSONdagi saved gifts ni o'qish"""
-    try:
-        with open(gift_db_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
-
-
-async def transfer_gift(username: str):
+async def transfer_specific_gift(username: str, gift_uid_to_send: str):
+    """Finds a specific gift by its unique ID and transfers it."""
     try:
         target = await client.get_entity(username)
         target_input = types.InputPeerUser(target.id, target.access_hash)
-        saved_gifts = await load_saved_gifts()
-        if not saved_gifts:
-            print("⚠️ JSON bo'sh giftlarni qidiryapman...")
-            saved_gifts = await fetch_real_saved_gifts()
-            while not saved_gifts:
-                print("⏳ Hozircha gift yoq Yangi gift kelishini kutyapman...")
-                await asyncio.sleep(10)
-                saved_gifts = await fetch_real_saved_gifts()
-        gift = saved_gifts.pop(0)
-        msg_id = gift["msg_id"]
-        title = gift["title"]
-        print(f"🎁 Tanlangan gift: {title} | msg_id={msg_id}")
+        
+        print("🔍 Zaxiradagi barcha sovg'alarni qidirilmoqda...")
+        result = await client(functions.payments.GetUserStarGiftsRequest())
+        
+        found_gift = None
+        for gift in result.gifts:
+            # The gift.id from GetUserStarGiftsRequest is the unique ID we need
+            if str(gift.id) == gift_uid_to_send:
+                found_gift = gift
+                break
+        
+        if not found_gift:
+            print(f"❌ Kerakli gift topilmadi: UID={gift_uid_to_send}")
+            # This exit code will be caught by the Node.js server
+            sys.exit(1)
+            
+        print(f"🎁 Topilgan gift: {found_gift.title} | msg_id={found_gift.id}")
+
         invoice = types.InputInvoiceStarGiftTransfer(
-            stargift=types.InputSavedStarGiftUser(msg_id=msg_id),
+            stargift=types.InputSavedStarGiftUser(msg_id=found_gift.id),
             to_id=target_input
         )
+        
         form = await client(functions.payments.GetPaymentFormRequest(invoice=invoice))
-        result = await client(functions.payments.SendStarsFormRequest(
+        
+        await client(functions.payments.SendStarsFormRequest(
             form_id=form.form_id,
             invoice=invoice
         ))
+        
         print(f"✅ Gift muvaffaqiyatli yuborildi: @{username}")
-        with open(gift_db_file, 'w', encoding='utf-8') as f:
-            json.dump(saved_gifts, f, ensure_ascii=False, indent=4)
-
         return True
 
     except errors.RPCError as e:
         print(f"❌ RPCError: {e}")
-        return False
+        # Exit with a non-zero code to indicate failure to the calling Node.js script
+        sys.exit(1)
 
     except Exception as e:
         print(f"❌ Xato: {e}")
-        return False
+        sys.exit(1)
 
 
 async def main():
-    if len(sys.argv) < 2:
-        print("Iltimos, argument sifatida yuboriladigan foydalanuvchi nomini kiriting (@username).")
-        print("Masalan: python scripts/auto_relayer.py @durov")
+    if len(sys.argv) < 3:
+        print("Iltimos, argument sifatida yuboriladigan foydalanuvchi nomini (@username) va gift UID'sini kiriting.")
+        print("Masalan: python scripts/auto_relayer.py @durov 123456789")
         return
 
     target_username = sys.argv[1].strip()
-    await transfer_gift(target_username)
+    target_gift_uid = sys.argv[2].strip()
+    await transfer_specific_gift(target_username, target_gift_uid)
 
 
 async def initialize_session():
@@ -117,21 +90,14 @@ if __name__ == "__main__":
     async def run():
         await client.connect()
         if not await client.is_user_authorized():
-            print("Avtorizatsiyadan o'tilmagan. Iltimos, telefon raqamingiz va kodni kiriting.")
-            # Bu yerda interaktiv tarzda telefon raqam va kod so'rash mantiqini qo'shish mumkin,
-            # ammo hozircha dastlabki ishga tushirish uchun qo'lda avtorizatsiya qilish tavsiya etiladi.
-            # `python -c "import asyncio; from scripts.auto_relayer import initialize_session; asyncio.run(initialize_session())"`
-            # buyrug'i orqali sessiya yarating.
-            print("Iltimos, avval sessiya faylini yarating.")
+            print("Avtorizatsiyadan o'tilmagan. Sessiya yaratish uchun buyruqni ishga tushiring:")
+            print("python -c \"from scripts.auto_relayer import client; client.start()\"")
             return
 
-        # Skript argumentlar bilan ishga tushirilgan bo'lsa, asosiy mantiqni bajarish
-        if len(sys.argv) > 1:
+        if len(sys.argv) > 2:
             await main()
         else:
-             # Agar argument bo'lmasa, sessiya yaratish yo'riqnomasini ko'rsatish
-            print("Argumentlar yo'q. Skript to'g'ri ishga tushirilganiga ishonch hosil qiling.")
-            print("Sessiya yaratish uchun: python -c \"from scripts.auto_relayer import client; client.start()\"")
-
+            print("Argumentlar yetarli emas. Skript to'g'ri chaqirilganiga ishonch hosil qiling.")
+            print("Foydalanish: python scripts/auto_relayer.py <username> <gift_uid>")
 
     client.loop.run_until_complete(run())
