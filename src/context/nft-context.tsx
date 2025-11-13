@@ -18,7 +18,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
@@ -70,30 +70,34 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
 
     const userDocRef = doc(firestore, 'users', userId);
 
-    runTransaction(firestore, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        
-        if (!userDoc.exists()) {
-             const userAccountData: WithFieldValue<UserAccount> = {
-                id: userId,
-                telegramId: String(telegramUser.id),
-                username: telegramUser.username || telegramUser.first_name,
-                fullName: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-                balance: 1000000, 
-            };
-            transaction.set(userDocRef, userAccountData);
+    const bootstrapUser = async () => {
+        try {
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) {
+                const userAccountData: UserAccount = {
+                    id: userId,
+                    telegramId: String(telegramUser.id),
+                    username: telegramUser.username || telegramUser.first_name,
+                    fullName: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+                    balance: 1000000, 
+                };
+                await setDoc(userDocRef, userAccountData);
+            }
+        } catch (error: any) {
+            console.error("Error bootstrapping user:", error);
+            if (error.code === 'permission-denied') {
+                const contextualError = new FirestorePermissionError({
+                    path: userDocRef.path,
+                    operation: 'write',
+                    requestResourceData: { userId, telegramUser }
+                });
+                errorEmitter.emit('permission-error', contextualError);
+            }
+            // Other errors (like network errors) are logged but don't crash the app
         }
-    }).catch((error: FirestoreError) => {
-        console.error("Error bootstrapping user:", error);
-         if (error.code === 'permission-denied') {
-            const contextualError = new FirestorePermissionError({
-                path: userDocRef.path,
-                operation: 'write', 
-                requestResourceData: { userId, telegramUser }
-            });
-            errorEmitter.emit('permission-error', contextualError);
-        }
-    });
+    };
+
+    bootstrapUser();
 
   }, [userId, telegramUser, firestore, isFirebaseUserLoading, isTelegramUserLoading]);
 
@@ -123,7 +127,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
             transaction.set(marketplaceDocRef, marketplaceNftData);
             transaction.delete(inventoryDocRef);
         });
-        toast({ title: "Muvaffaqiyatli!", description: `${name} sotuvga qo'yildi.`});
+        toast({ title: "Muvaffaqiyatli!", description: `NFT sotuvga qo'yildi.`});
     } catch (error: any) {
         console.error("Error listing NFT:", error);
         toast({ variant: 'destructive', title: 'Xatolik', description: error.message });
@@ -229,7 +233,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const buyNft = async (nft: Nft) => {
-    if (!userId || !nft.ownerId) {
+    if (!userId || !nft.ownerId || !firestore) {
         toast({ variant: "destructive", title: "Cannot complete purchase.", description: "You must be logged in and the NFT must have an owner."});
         return;
     }
@@ -310,5 +314,3 @@ export const useNft = () => {
   }
   return context;
 };
-
-    
