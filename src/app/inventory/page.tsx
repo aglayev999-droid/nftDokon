@@ -198,7 +198,9 @@ export default function InventoryPage() {
           <DialogHeader>
             <DialogTitle>NFT Yechib Olish</DialogTitle>
             <DialogDescription>
-              "{selectedNft?.name}" nomli NFTni telegram hisobingizga qaytarib olmoqchisiz.
+                Siz inventaringizdan bir NFT yechib olmoqchisiz. Buning evaziga bizning zaxiramizdan mavjud bo'lgan Telegram sovg'asi sizga yuboriladi.
+                <br/><br/>
+                <strong className="text-destructive">Diqqat:</strong> Yechib olinayotgan NFT turi va yuboriladigan sovg'a turi bir-biriga mos kelmasligi mumkin.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
