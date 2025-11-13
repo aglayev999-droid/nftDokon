@@ -18,7 +18,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, increment, getDocs } from 'firebase/firestore';
+import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, increment, getDocs, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
@@ -70,20 +70,21 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
 
     const userDocRef = doc(firestore, 'users', userId);
     
-    // Extract referral ID from URL
-    const params = new URLSearchParams(window.location.search);
-    const refId = params.get('start')?.replace('ref_', '');
-
     const bootstrapUser = async () => {
         try {
             const userDoc = await getDoc(userDocRef);
             if (!userDoc.exists()) {
+                 // Extract referral ID from URL search params
+                const params = new URLSearchParams(window.location.search);
+                const startParam = params.get('start');
+                const refId = startParam && startParam.startsWith('ref_') ? startParam.replace('ref_', '') : null;
+
                 const userAccountData: UserAccount = {
                     id: userId,
                     telegramId: String(telegramUser.id),
                     username: telegramUser.username || telegramUser.first_name,
                     fullName: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-                    balance: 1000000,
+                    balance: 1000000, // Initial balance for new users
                     nftsBought: 0,
                     nftsSold: 0,
                     tradeVolume: 0,
@@ -95,9 +96,13 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
 
                 // If referred, update the referrer's count
                 if (refId) {
-                  const referrerQuery = await getDocs(collection(firestore, 'users').where('telegramId', '==', refId).limit(1));
-                  if (!referrerQuery.empty) {
-                    const referrerDoc = referrerQuery.docs[0];
+                  // Find referrer by their Telegram ID
+                  const usersCollectionRef = collection(firestore, 'users');
+                  const q = query(usersCollectionRef, where("telegramId", "==", refId));
+                  const referrerQuerySnapshot = await getDocs(q);
+
+                  if (!referrerQuerySnapshot.empty) {
+                    const referrerDoc = referrerQuerySnapshot.docs[0];
                     await setDoc(referrerDoc.ref, { referrals: increment(1) }, { merge: true });
                   }
                 }
@@ -267,7 +272,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
 
     const sellerId = nft.ownerId;
     const price = nft.price;
-    const commission = price * 0.01;
+    const commission = price * 0.01; // 1% commission
     
     const marketplaceDocRef = doc(firestore, 'marketplace', nft.id);
     const buyerInventoryDocRef = doc(firestore, 'users', userId, 'inventory', nft.id);
@@ -290,24 +295,27 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
 
             if (buyerData.balance < nftData.price) throw new Error("Insufficient funds.");
 
-            // Debit buyer
+            // 1. Debit buyer
             transaction.update(buyerUserRef, { 
                 balance: increment(-price),
                 nftsBought: increment(1),
                 tradeVolume: increment(price)
             });
-            // Credit seller
+            // 2. Credit seller
             transaction.update(sellerUserRef, { 
                 balance: increment(price - commission),
                 nftsSold: increment(1),
                 tradeVolume: increment(price)
              });
 
-            // Credit referrer if exists
+            // 3. Credit referrer if one exists
             if (buyerData.referredBy) {
-                const referrerQuery = await getDocs(collection(firestore, 'users').where('telegramId', '==', buyerData.referredBy).limit(1));
-                if (!referrerQuery.empty) {
-                    const referrerDoc = referrerQuery.docs[0];
+                const usersCollectionRef = collection(firestore, 'users');
+                const q = query(usersCollectionRef, where("telegramId", "==", buyerData.referredBy));
+                const referrerQuerySnapshot = await getDocs(q);
+
+                if (!referrerQuerySnapshot.empty) {
+                    const referrerDoc = referrerQuerySnapshot.docs[0];
                     transaction.update(referrerDoc.ref, {
                         balance: increment(commission),
                         referralEarnings: increment(commission)
@@ -315,8 +323,8 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
 
-            // Move NFT from marketplace to buyer's inventory
-            const newInventoryData = { ...nftData, ownerId: userId, isListed: false, price: 0 };
+            // 4. Move NFT from marketplace to buyer's inventory
+            const newInventoryData: Nft = { ...nftData, ownerId: userId, isListed: false, price: 0 };
             transaction.set(buyerInventoryDocRef, newInventoryData);
             transaction.delete(marketplaceDocRef);
         });
@@ -355,3 +363,5 @@ export const useNft = () => {
   }
   return context;
 };
+
+    
