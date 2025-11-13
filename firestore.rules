@@ -46,8 +46,10 @@ service cloud.firestore {
     // Only admins can read the list of other admins.
     match /admins/{adminId} {
         allow get, list: if isAdmin();
-        // Disallow client-side creation/deletion of admins for security.
-        allow create, update, delete: if false;
+        // Allow a user to create THEIR OWN admin document if they are an admin.
+        allow create: if isOwner(adminId) && isAdmin();
+        // Disallow client-side updates/deletions of admins for security.
+        allow update, delete: if false;
     }
     
     // /auctions/{auctionId}
