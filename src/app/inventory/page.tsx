@@ -28,9 +28,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useNft } from '@/context/nft-context';
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { useTelegramUser } from '@/context/telegram-user-context';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,35 +94,59 @@ export default function InventoryPage() {
     const withdrawalsRef = collection(firestore, 'withdrawals');
     const selectedNftIds = Array.from(selectedNfts);
     
+    const batch = writeBatch(firestore);
+
+    for (const nftId of selectedNftIds) {
+      const nft = nfts.find(n => n.id === nftId);
+      if (nft) {
+        const withdrawalData = {
+          userId: firebaseUser.uid,
+          telegramUsername: telegramUsername,
+          nftId: nft.id,
+          nftName: nft.name,
+          status: 'pending',
+          requestedAt: serverTimestamp(),
+        };
+        const newWithdrawalRef = doc(withdrawalsRef); // Create a ref with a new ID
+        batch.set(newWithdrawalRef, withdrawalData);
+
+        // Also add deletion from inventory to the same batch
+        const inventoryItemRef = doc(firestore, 'users', firebaseUser.uid, 'inventory', nftId);
+        batch.delete(inventoryItemRef);
+      }
+    }
+    
     try {
-        for (const nftId of selectedNftIds) {
-            const nft = nfts.find(n => n.id === nftId);
-            if (nft) {
-                 await addDoc(withdrawalsRef, {
-                    userId: firebaseUser.uid,
-                    telegramUsername: telegramUsername,
-                    nftId: nft.id,
-                    nftName: nft.name,
-                    status: 'pending',
-                    requestedAt: serverTimestamp(),
-                });
-                // Remove from inventory immediately after creating the request
-                await removeNftFromInventory(nftId);
-            }
-        }
-        
+        await batch.commit();
         toast({
             title: "So'rov yuborildi",
-            description: `${selectedNfts.size} ta NFTni yechib olish so'rovi muvaffaqiyatli yuborildi.`,
+            description: `${selectedNfts.size} ta NFTni yechib olish so'rovi muvaffaqiyatli yuborildi va inventardan olib tashlandi.`,
         });
 
-    } catch (error) {
-         console.error("Error creating withdrawal request:", error);
-         toast({
-            variant: "destructive",
-            title: "Xatolik",
-            description: "So'rovni yuborishda xatolik yuz berdi. Iltimos, keyinroq yana urinib ko'ring.",
-        });
+    } catch (error: any) {
+        if (error.code === 'permission-denied') {
+            const firstNft = nfts.find(n => n.id === selectedNftIds[0]);
+            const sampleWithdrawalData = {
+                userId: firebaseUser.uid,
+                telegramUsername: telegramUsername,
+                nftId: firstNft?.id,
+                nftName: firstNft?.name,
+                status: 'pending',
+            };
+            const contextualError = new FirestorePermissionError({
+                path: 'withdrawals', // Path of the collection
+                operation: 'create',
+                requestResourceData: sampleWithdrawalData,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+        } else {
+            console.error("Error creating withdrawal request:", error);
+            toast({
+                variant: "destructive",
+                title: "Xatolik",
+                description: "So'rovni yuborishda xatolik yuz berdi. Iltimos, keyinroq yana urinib ko'ring.",
+            });
+        }
     }
     
     setSelectedNfts(new Set());
@@ -293,3 +317,5 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    
