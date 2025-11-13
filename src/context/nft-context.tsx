@@ -18,7 +18,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, increment, getDocs } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
@@ -203,7 +203,11 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   
   const placeBid = (nft: Nft, bidAmount: number) => {
     if (!userId || !firestore) {
-        toast({ variant: "destructive", title: "You must be logged in to bid."});
+        toast({ variant: "destructive", title: "Siz narx taklif qilish uchun tizimga kirishingiz kerak."});
+        return;
+    }
+    if (userId === nft.ownerId) {
+        toast({ variant: "destructive", title: "O'zingizning auksioningizga narx taklif qila olmaysiz."});
         return;
     }
 
@@ -214,14 +218,14 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
         const userDoc = await transaction.get(userRef);
         const auctionDoc = await transaction.get(auctionRef);
 
-        if (!userDoc.exists()) throw new Error("Your user account was not found.");
-        if (!auctionDoc.exists()) throw new Error("This auction no longer exists.");
+        if (!userDoc.exists()) throw new Error("Foydalanuvchi hisobi topilmadi.");
+        if (!auctionDoc.exists()) throw new Error("Bu auksion endi mavjud emas.");
 
         const userData = userDoc.data() as UserAccount;
         const auctionData = auctionDoc.data() as Nft;
 
-        if (userData.balance < bidAmount) throw new Error("Not enough balance to place this bid.");
-        if (bidAmount <= (auctionData.highestBid || 0)) throw new Error("Your bid must be higher than the current highest bid.");
+        if (userData.balance < bidAmount) throw new Error("Ushbu narxni taklif qilish uchun balansingizda mablag' yetarli emas.");
+        if (bidAmount <= (auctionData.highestBid || 0)) throw new Error("Sizning taklifingiz joriy eng yuqori taklifdan baland bo'lishi kerak.");
         
         const updateData = { 
             highestBid: bidAmount,
@@ -230,7 +234,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
         transaction.update(auctionRef, updateData);
     })
     .then(() => {
-        toast({ title: "Bid placed successfully!", description: `You are now the highest bidder for ${nft.name}.` });
+        toast({ title: "Taklif muvaffaqiyatli!", description: `Siz endi ${nft.name} uchun eng yuqori narxni taklif qildingiz.` });
     })
     .catch((error: any) => {
         if (error.code === "permission-denied") {
@@ -241,8 +245,8 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
              });
              errorEmitter.emit('permission-error', contextualError);
         } else {
-            console.error("Bid failed:", error);
-            toast({ variant: "destructive", title: "Bid Failed", description: error.message });
+            console.error("Taklif xatosi:", error);
+            toast({ variant: "destructive", title: "Taklif Amalga Oshmadi", description: error.message });
         }
     });
   };

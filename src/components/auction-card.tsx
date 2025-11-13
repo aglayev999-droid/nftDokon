@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -68,7 +69,10 @@ export function AuctionCard({ nft }: AuctionCardProps) {
     return time.toString().padStart(2, '0');
   }
 
-  const bidAmount = (nft.highestBid || 0) * 1.05;
+  // Suggest a bid that is 5% higher than the current highest bid or starting price
+  const currentBid = nft.highestBid || nft.startingPrice || 0;
+  const bidAmount = Math.ceil(currentBid * 1.05);
+
   const nftIdNumber = nft.id.split('-').pop();
 
   const handlePlaceBid = () => {
@@ -97,7 +101,7 @@ export function AuctionCard({ nft }: AuctionCardProps) {
             <span className="text-sm text-muted-foreground">{t('highestBid')}</span>
             <div className="flex items-center gap-2 text-primary font-bold text-lg">
                 <Tag className="w-4 h-4 text-accent" />
-                <span>{nft.highestBid?.toLocaleString()} UZS</span>
+                <span>{(nft.highestBid || nft.startingPrice)?.toLocaleString()} UZS</span>
             </div>
         </div>
          <div className="flex justify-between items-center text-sm text-muted-foreground">
@@ -112,7 +116,9 @@ export function AuctionCard({ nft }: AuctionCardProps) {
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full font-bold" onClick={handlePlaceBid}>{t('placeBid')} {bidAmount.toFixed(0)} UZS</Button>
+        <Button className="w-full font-bold" onClick={handlePlaceBid}>
+          {t('placeBid')} {bidAmount.toLocaleString()} UZS
+        </Button>
       </CardFooter>
     </Card>
   );

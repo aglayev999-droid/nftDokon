@@ -76,7 +76,8 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       
       // UPDATE: Allow signed-in users to update the highestBid and highestBidderId.
-      allow update: if isSignedIn();
+      // This is crucial for the bidding functionality.
+      allow update: if isSignedIn() && request.resource.data.keys().hasAll(['highestBid', 'highestBidderId']);
       
       // DELETE: Deleting auctions is disallowed. They are handled by a backend process.
       allow delete: if false;
