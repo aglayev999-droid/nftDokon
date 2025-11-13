@@ -108,8 +108,9 @@ async def scan_old_gifts(client):
     dialog_count = 0
     total_found = 0
     async for dialog in client.iter_dialogs():
+        # Limit scanning to a reasonable number of recent dialogs to speed it up
         dialog_count += 1
-        if dialog_count > 50: # Limit scanning to recent 50 dialogs to speed it up
+        if dialog_count > 50:
             break
 
         ent = dialog.entity
@@ -123,39 +124,42 @@ async def scan_old_gifts(client):
         count = 0
 
         try:
-            # We only need to check the very last message for a new gift
-            msgs = await client.get_messages(ent, limit=5)
-            for msg in msgs:
-                if msg.out:
+            # We only need to check recent messages for a new gift.
+            # We are looking for gifts sent TO us, not sent BY us.
+            async for msg in client.iter_messages(ent, limit=10, from_user=ent.id):
+                if not isinstance(msg, MessageService) or not isinstance(getattr(msg, "action", None), MessageActionStarGiftUnique):
                     continue
-                if isinstance(msg, MessageService) and isinstance(getattr(msg, "action", None), MessageActionStarGiftUnique):
-                    action = msg.action
-                    # We are looking for gifts sent TO us, so transferred should be false.
-                    if getattr(action, "transferred", False):
-                        continue
-                    gift = action.gift
-                    uid = make_uid(chat_id, msg.id, getattr(gift, "gift_id", None))
-                    model, pattern, backdrop = extract_attrs(gift)
-                    
-                    # sender_name should be the name of the person who sent it
-                    sender_ent = await client.get_entity(msg.sender_id)
-                    sender_first = getattr(sender_ent, "first_name", "") or ""
-                    sender_last = getattr(sender_ent, "last_name", "") or ""
-                    sender_name = f"{sender_first} {sender_last}".strip() or str(msg.sender_id)
+                
+                action = msg.action
+                # We are looking for gifts sent TO us, so 'transferred' should be False.
+                # 'upgrade' means we sent it, so we skip that too.
+                # We only care about new, incoming gifts.
+                if getattr(action, "transferred", False) or getattr(action, "upgrade", False):
+                    continue
 
-                    is_saved = save_to_db((
-                        uid, msg.id, chat_id, name, msg.sender_id, sender_name,
-                        gift.title, gift.num, model, pattern, backdrop,
-                        gift.value_amount, gift.value_currency,
-                        int(action.transferred), int(action.upgrade),
-                        str(msg.date), datetime.utcnow().isoformat()
-                    ))
-                    if is_saved:
-                        show_gift(gift, name, msg, sender_name)
-                        count += 1
-                        total_found += 1
+                gift = action.gift
+                uid = make_uid(chat_id, msg.id, getattr(gift, "id", None))
+                model, pattern, backdrop = extract_attrs(gift)
+                
+                # sender_name should be the name of the person who sent it
+                sender_ent = await client.get_entity(msg.sender_id)
+                sender_first = getattr(sender_ent, "first_name", "") or ""
+                sender_last = getattr(sender_ent, "last_name", "") or ""
+                sender_name = f"{sender_first} {sender_last}".strip() or str(msg.sender_id)
+
+                is_saved = save_to_db((
+                    uid, msg.id, chat_id, name, msg.sender_id, sender_name,
+                    gift.title, gift.num, model, pattern, backdrop,
+                    gift.value_amount, gift.value_currency,
+                    int(action.transferred), int(action.upgrade),
+                    str(msg.date), datetime.utcnow().isoformat()
+                ))
+                if is_saved:
+                    show_gift(gift, name, msg, sender_name)
+                    count += 1
+                    total_found += 1
             if count > 0:
-                print(f"✅ {name}: {count} ta gift topildi")
+                print(f"✅ {name}: {count} ta yangi gift topildi")
         except Exception as e:
             print(f"⚠️ {name} da xato: {e}")
     
@@ -163,6 +167,39 @@ async def scan_old_gifts(client):
         print("🤷‍♂️ Yangi sovg'alar topilmadi.")
 
     print("\n🟢 Eski lichkalar tahlili tugadi.\n")
+
+@events.register(events.NewMessage(incoming=True))
+async def monitor_new(event):
+    msg = event.message
+    if not isinstance(msg, MessageService) or not isinstance(getattr(msg, "action", None), MessageActionStarGiftUnique):
+        return
+
+    action = msg.action
+    if getattr(action, "transferred", False) or getattr(action, "upgrade", False):
+        return
+
+    chat = await event.get_chat()
+    sender = await msg.get_sender()
+
+    if not chat or not sender or not hasattr(chat, 'first_name') or getattr(chat, "bot", False) or getattr(chat, "is_self", False):
+        return
+
+    gift = action.gift
+    uid = make_uid(chat.id, msg.id, getattr(gift, "id", None))
+    model, pattern, backdrop = extract_attrs(gift)
+    
+    sender_first = getattr(sender, "first_name", "") or ""
+    sender_last = getattr(sender, "last_name", "") or ""
+    sender_name = f"{sender_first} {sender_last}".strip() or str(sender.id)
+    
+    if save_to_db((
+        uid, msg.id, chat.id, sender_name, sender.id, sender_name,
+        gift.title, gift.num, model, pattern, backdrop,
+        gift.value_amount, gift.value_currency,
+        int(action.transferred), int(action.upgrade),
+        str(msg.date), datetime.utcnow().isoformat()
+    )):
+        show_gift(gift, sender_name, msg, sender_name)
 
 
 # === Asosiy ishga tushirish ===
@@ -182,10 +219,11 @@ async def main(mode):
 
 
 if __name__ == "__main__":
-    # Default to "scan" if no argument is provided
     run_mode = "scan"
-    if len(sys.argv) > 1 and sys.argv[1] == "listen":
+    if len(sys.argv) > 1 and sys.argv[1].lower() == "listen":
         run_mode = "listen"
     
-    # Using asyncio.run() is cleaner for top-level async calls
-    asyncio.run(main(run_mode))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(run_mode))
+
+    
