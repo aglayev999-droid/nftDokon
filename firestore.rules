@@ -35,7 +35,7 @@ service cloud.firestore {
         // Creating and deleting inventory items is now handled by server-side transactions
         // (moving to/from marketplace, auctions, or withdrawals).
         // Direct client manipulation is disallowed to maintain integrity.
-        allow write: if false;
+        allow create, update, delete: if false;
       }
     }
     
@@ -88,5 +88,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
