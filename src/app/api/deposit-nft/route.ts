@@ -13,9 +13,9 @@ interface GiftFromDb {
   gift_uid: string;
   title: string;
   num: string;
-  model: string;
-  pattern: string;
-  backdrop: string;
+  model: string | null;
+  pattern: string | null;
+  backdrop: string | null;
   value_amount: number;
   sender_id: number;
 }
@@ -117,8 +117,6 @@ export async function POST(request: NextRequest) {
 
     // Check if the sender of the gift matches the user who made the request
     if (latestGift.sender_id !== telegramUserId) {
-         // Even if it's not for this user, we should consider clearing it to avoid it being picked up by the next user.
-         // However, another user might be trying to claim it. For now, we leave it but warn.
          console.warn(`Latest gift sender (${latestGift.sender_id}) does not match requestor (${telegramUserId}).`);
          return NextResponse.json({ ok: false, error: `Topilgan so'nggi sovg'a sizga tegishli emas. U boshqa foydalanuvchi tomonidan yuborilgan. Iltimos, qayta urinib ko'ring.` }, { status: 403 });
     }
@@ -130,28 +128,58 @@ export async function POST(request: NextRequest) {
     const docSnapshot = await inventoryItemRef.get();
     if(docSnapshot.exists) {
         console.log(`NFT with ID ${newNftId} already exists in user's inventory. Skipping.`);
-        // IMPORTANT: Delete it from sqlite db anyway to prevent it from being processed again.
         await deleteGiftFromDb(latestGift.id);
         return NextResponse.json({ ok: true, message: 'Bu sovg\'a allaqachon inventaringizda mavjud.' });
     }
 
-    // Map rarity based on value or model
-    let rarity: Nft['rarity'] = 'Common';
-    if (latestGift.model?.toLowerCase().includes('rare')) rarity = 'Rare';
-    if (latestGift.model?.toLowerCase().includes('epic')) rarity = 'Epic';
-    if (latestGift.model?.toLowerCase().includes('legendary')) rarity = 'Legendary';
-    
+    // --- Auto-determine properties based on name and number ---
     const nftName = latestGift.title || 'Nomsiz Sovg\'a';
     const nftNum = latestGift.num || '0';
-    const slug = nftName.toLowerCase().replace(/ /g, '');
+    
+    let rarity: Nft['rarity'] = 'Common';
+    let model: Nft['model'] | string | null = latestGift.model;
+    let background: Nft['background'] | string | null = latestGift.backdrop;
+    let symbol: Nft['symbol'] | undefined = undefined;
+
+    // Specific rules for known NFTs
+    if (nftName.toLowerCase().includes('plush pepe')) {
+        if (nftNum === '777') {
+            rarity = 'Legendary';
+            model = 'pumpkin';
+            background = 'Rainbow';
+            symbol = 'illuminati';
+        } else if (nftNum === '222') {
+            rarity = 'Epic';
+            model = 'pumpkin';
+            background = 'onyx black';
+            symbol = 'illuminati';
+        }
+    } else if (nftName.toLowerCase().includes('fresh socks')) {
+        if (nftNum === '1111') {
+            rarity = 'Rare';
+            model = 'Rare'; // Or whatever is appropriate
+            background = 'Holographic';
+        }
+    }
+
+    // General rules based on model name if not overridden
+    if (rarity === 'Common') { // Only if not already set by specific rules
+        if (model?.toLowerCase().includes('legendary')) rarity = 'Legendary';
+        else if (model?.toLowerCase().includes('epic')) rarity = 'Epic';
+        else if (model?.toLowerCase().includes('rare')) rarity = 'Rare';
+    }
+    // --- End of property determination ---
+
+    const slug = nftName.toLowerCase().replace(/\s+/g, '');
 
     const newNftData: Omit<Nft, 'id'> = {
-        name: nftName,
+        name: `${nftName} #${nftNum}`,
         price: 0, // Not for sale by default
         rarity: rarity,
-        collection: 'TON Treasures', // Default collection, can be improved
-        model: latestGift.model,
-        background: latestGift.backdrop,
+        collection: 'TON Treasures', // Can be improved
+        model: model as Nft['model'],
+        background: background as Nft['background'],
+        symbol: symbol,
         imageUrl: `https://nft.fragment.com/gift/${slug}-${nftNum}.png`,
         lottieUrl: `https://nft.fragment.com/gift/${slug}-${nftNum}.tgs`,
         imageHint: 'telegram gift',
@@ -173,3 +201,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: error.message || 'Serverda noma\'lum xatolik yuz berdi.' }, { status: 500 });
   }
 }
+
+    
