@@ -98,7 +98,7 @@ export default function InventoryPage() {
     const batch = writeBatch(firestore);
 
     // Prepare a sample of the data for potential error reporting
-    let sampleWithdrawalData = {};
+    let sampleWithdrawalData: any = {};
 
     for (const nftId of selectedNftIds) {
       const nft = nfts.find(n => n.id === nftId);
@@ -320,3 +320,5 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    
