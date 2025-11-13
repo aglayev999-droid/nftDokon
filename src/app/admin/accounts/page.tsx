@@ -16,10 +16,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { useState } from 'react';
+import { Card, CardContent, CardDescription } from '@/components/ui/card';
 
 export default function AdminAccountsPage() {
   const firestore = useFirestore();
+  const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
 
   const usersRef = useMemoFirebase(
     () => (firestore ? collection(firestore, 'users') : null),
@@ -65,7 +74,7 @@ export default function AdminAccountsPage() {
                             </TableCell>
                             <TableCell className="text-right font-mono">{user.balance.toLocaleString()} UZS</TableCell>
                              <TableCell className="text-right">
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
                                     <Eye className="mr-2 h-4 w-4" />
                                     Ko'rish
                                 </Button>
@@ -81,6 +90,37 @@ export default function AdminAccountsPage() {
                 Hozircha foydalanuvchilar mavjud emas.
             </div>
         )}
+
+        <Dialog open={!!selectedUser} onOpenChange={(isOpen) => !isOpen && setSelectedUser(null)}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{selectedUser?.fullName}</DialogTitle>
+                </DialogHeader>
+                {selectedUser && (
+                    <div className="space-y-4">
+                         <Card className="bg-primary/10 border-primary/20 text-center">
+                            <CardContent className="p-4">
+                                <p className="text-sm text-primary/80">Joriy Balans</p>
+                                <p className="text-3xl font-bold font-headline text-primary">
+                                {selectedUser.balance.toLocaleString()} <span className="text-xl">UZS</span>
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <div className="text-sm space-y-2">
+                             <div className="flex justify-between">
+                                <span className="text-muted-foreground">Firebase UID:</span>
+                                <span className="font-mono text-xs">{selectedUser.id}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Telegram ID:</span>
+                                <span className="font-mono">{selectedUser.telegramId}</span>
+                            </div>
+                        </div>
+                        {/* Future: Add inventory view or other actions here */}
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }

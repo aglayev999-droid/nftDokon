@@ -1,33 +1,39 @@
 
 import { Bot } from 'telegram';
+import dotenv from 'dotenv';
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "8108408790:AAHEhCXQXaaZEbQeZfGblqvWKwhNLOfxDco";
-const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID || "7275593552";
+dotenv.config();
 
-if (!BOT_TOKEN || !ADMIN_CHAT_ID) {
-    console.warn("Telegram environment variables (TELEGRAM_BOT_TOKEN, TELEGRAM_ADMIN_CHAT_ID) are not set.");
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+
+if (!BOT_TOKEN) {
+    console.warn("Telegram environment variable TELEGRAM_BOT_TOKEN is not set.");
 }
 
-const bot = new Bot(BOT_TOKEN);
+const bot = new Bot(BOT_TOKEN || "");
 
 /**
- * Sends a notification message to the admin via Telegram.
+ * Sends a notification message to a specific chat via Telegram.
+ * @param chatId The ID of the chat to send the message to.
  * @param message The text of the message to send. Supports Markdown.
  */
-export async function sendTelegramNotification(message: string): Promise<void> {
-  if (!BOT_TOKEN || !ADMIN_CHAT_ID) {
+export async function sendTelegramNotification(chatId: string | number, message: string): Promise<void> {
+  if (!BOT_TOKEN) {
     throw new Error("Telegram bot is not configured on the server.");
+  }
+  if (!chatId) {
+    throw new Error("A valid chatId must be provided to send a notification.");
   }
 
   try {
     await bot.api.sendMessage({
-      chat_id: ADMIN_CHAT_ID,
+      chat_id: String(chatId),
       text: message,
       parse_mode: 'Markdown',
     });
-    console.log(`Admin (${ADMIN_CHAT_ID})ga xabar muvaffaqiyatli yuborildi.`);
+    console.log(`User (${chatId}) ga xabar muvaffaqiyatli yuborildi.`);
   } catch (error) {
-    console.error("Adminga xabar yuborishda xatolik yuz berdi:", error);
+    console.error("Foydalanuvchiga xabar yuborishda xatolik yuz berdi:", error);
     // Re-throw the error to be handled by the caller
     throw error;
   }
