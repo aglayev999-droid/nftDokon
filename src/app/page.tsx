@@ -40,8 +40,7 @@ import { useNft } from '@/context/nft-context';
 
 export default function MarketplacePage() {
   const { translations } = useLanguage();
-  const { nfts } = useNft();
-  const listedNfts = nfts.filter((nft) => nft.isListed);
+  const { marketplaceNfts, isLoading } = useNft();
 
   const t = (key: string) => {
     return translations[key] || key;
@@ -178,10 +177,14 @@ export default function MarketplacePage() {
               </Select>
             </div>
           </div>
-          {listedNfts.length > 0 ? (
+          {isLoading ? (
+             <div className="col-span-full text-center py-16">
+                <p className="text-muted-foreground">Bozor yuklanmoqda...</p>
+             </div>
+          ) : marketplaceNfts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {listedNfts.map((nft) => (
-                  <NftCard key={nft.id} nft={nft} />
+                {marketplaceNfts.map((nft) => (
+                  <NftCard key={nft.id} nft={nft} action="buy"/>
                 ))}
             </div>
              ) : (
@@ -194,3 +197,5 @@ export default function MarketplacePage() {
     </div>
   );
 }
+
+    

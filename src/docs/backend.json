@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserAccount": {
@@ -70,6 +71,14 @@
         }
       },
       {
+        "path": "/marketplace/{nftId}",
+        "definition": {
+          "entityName": "NftGift",
+          "schema": { "$ref": "#/entities/NftGift" },
+          "description": "Stores all currently listed NFTs for sale. The document ID is the same as the NFT ID."
+        }
+      },
+      {
         "path": "/auctions/{auctionId}",
         "definition": {
           "entityName": "NftGift",
@@ -80,3 +89,5 @@
     ]
   }
 }
+
+    

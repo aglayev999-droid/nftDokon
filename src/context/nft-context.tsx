@@ -9,7 +9,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { Nft, UserAccount, nftsData as initialNfts } from '@/lib/data';
+import { Nft, UserAccount } from '@/lib/data';
 import {
   useFirestore,
   useUser,
@@ -18,15 +18,17 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, writeBatch, runTransaction, getDoc, Transaction, getDocs, FirestoreError, doc as createDocRef, WithFieldValue, collection as getCollectionRef, query, where } from 'firebase/firestore';
+import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, deleteDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
 import { useWallet } from './wallet-context';
 
 interface NftContextType {
-  nfts: Nft[];
-  setNftStatus: (nftId: string, isListed: boolean, price?: number) => void;
+  inventoryNfts: Nft[];
+  marketplaceNfts: Nft[];
+  setNftForSale: (nftId: string, price: number) => void;
+  removeNftFromSale: (nftId: string) => void;
   isLoading: boolean;
   removeNftFromInventory: (nftId: string) => Promise<void>;
   addNftToAuctions: (nft: Nft) => Promise<void>;
@@ -41,17 +43,24 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const { user: telegramUser, isLoading: isTelegramUserLoading } = useTelegramUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { balance, setBalance } = useWallet();
+  const { balance } = useWallet();
 
   const userId = firebaseUser?.uid;
 
+  // Hook for user's personal inventory
   const inventoryRef = useMemoFirebase(
     () => (userId && firestore ? collection(firestore, 'users', userId, 'inventory') : null),
     [userId, firestore]
   );
+  const { data: inventoryNfts, isLoading: isInventoryLoading } = useCollection<Nft>(inventoryRef);
 
-  const { data: nftsFromDb, isLoading: isCollectionLoading } =
-    useCollection<Nft>(inventoryRef);
+  // Hook for the global marketplace
+  const marketplaceRef = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'marketplace') : null),
+    [firestore]
+  );
+  const { data: marketplaceNfts, isLoading: isMarketplaceLoading } = useCollection<Nft>(marketplaceRef);
+
 
   // Effect to bootstrap user data
   useEffect(() => {
@@ -64,16 +73,14 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
     runTransaction(firestore, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
         
-        // Bootstrap user account if it doesn't exist
         if (!userDoc.exists()) {
              const userAccountData: WithFieldValue<UserAccount> = {
                 id: userId,
                 telegramId: String(telegramUser.id),
                 username: telegramUser.username || telegramUser.first_name,
                 fullName: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-                balance: 1000000, // Generous starting balance
+                balance: 1000000, 
             };
-            console.log(`User document for ${userId} does not exist, bootstrapping...`);
             transaction.set(userDocRef, userAccountData);
         }
     }).catch((error: FirestoreError) => {
@@ -91,27 +98,73 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   }, [userId, telegramUser, firestore, isFirebaseUserLoading, isTelegramUserLoading]);
 
 
-  const setNftStatus = (nftId: string, isListed: boolean, price?: number) => {
-    if (!userId || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Error',
-        description: 'You must be logged in to manage NFTs.',
-      });
-      return;
-    }
+  const setNftForSale = async (nftId: string, price: number) => {
+    if (!userId || !firestore) return;
     
-    const nftToUpdate = nftsFromDb?.find(n => n.id === nftId);
-    if (!nftToUpdate) return;
-    
-    const docRef = doc(firestore, 'users', userId, 'inventory', nftId);
-    
-    const updatedData: Partial<Nft> = {
-        isListed: isListed,
-        price: isListed ? price : 0,
-    };
+    const inventoryDocRef = doc(firestore, 'users', userId, 'inventory', nftId);
+    const marketplaceDocRef = doc(firestore, 'marketplace', nftId);
 
-    setDocumentNonBlocking(docRef, updatedData, { merge: true });
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const inventoryDoc = await transaction.get(inventoryDocRef);
+            if (!inventoryDoc.exists()) {
+                throw new Error("NFT not found in your inventory.");
+            }
+
+            const nftData = inventoryDoc.data() as Nft;
+            const marketplaceNftData: Nft = {
+                ...nftData,
+                price: price,
+                isListed: true, // Explicitly set as listed
+                ownerId: userId // Ensure ownerId is correctly set
+            };
+
+            // Move from inventory to marketplace
+            transaction.set(marketplaceDocRef, marketplaceNftData);
+            transaction.delete(inventoryDocRef);
+        });
+        toast({ title: "Muvaffaqiyatli!", description: `${name} sotuvga qo'yildi.`});
+    } catch (error: any) {
+        console.error("Error listing NFT:", error);
+        toast({ variant: 'destructive', title: 'Xatolik', description: error.message });
+    }
+  };
+  
+  const removeNftFromSale = async (nftId: string) => {
+    if (!userId || !firestore) return;
+    
+    const marketplaceDocRef = doc(firestore, 'marketplace', nftId);
+    const inventoryDocRef = doc(firestore, 'users', userId, 'inventory', nftId);
+
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const marketplaceDoc = await transaction.get(marketplaceDocRef);
+            if (!marketplaceDoc.exists()) {
+                throw new Error("NFT not found in the marketplace.");
+            }
+            
+            const nftData = marketplaceDoc.data() as Nft;
+
+            // Security check: only the owner can unlist
+            if (nftData.ownerId !== userId) {
+                throw new Error("You are not the owner of this NFT.");
+            }
+            
+            const inventoryNftData: Nft = {
+                ...nftData,
+                price: 0,
+                isListed: false
+            };
+
+            // Move from marketplace back to inventory
+            transaction.set(inventoryDocRef, inventoryNftData);
+            transaction.delete(marketplaceDocRef);
+        });
+        toast({ title: "Muvaffaqiyatli!", description: "NFT sotuvdan olindi."});
+    } catch (error: any) {
+        console.error("Error unlisting NFT:", error);
+        toast({ variant: 'destructive', title: 'Xatolik', description: error.message });
+    }
   };
   
   const removeNftFromInventory = useCallback(async (nftId: string) => {
@@ -189,32 +242,41 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
         return;
     }
 
-    try {
-      const response = await fetch('/api/buy-nft', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          nftId: nft.id,
-          sellerId: nft.ownerId,
-          buyerId: userId 
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'An unknown error occurred.');
-      }
-      
-      // The wallet context will automatically update the balance via its own Firestore listener.
-      // No need to manually setBalance here.
-
-      toast({ title: "Purchase successful!", description: `You bought ${nft.name}.` });
-      
-      // The real-time listeners for the marketplace/inventory will handle showing/hiding the NFT automatically.
+    const sellerId = nft.ownerId;
     
+    const marketplaceDocRef = doc(firestore, 'marketplace', nft.id);
+    const buyerInventoryDocRef = doc(firestore, 'users', userId, 'inventory', nft.id);
+    const sellerUserRef = doc(firestore, 'users', sellerId);
+    const buyerUserRef = doc(firestore, 'users', userId);
+
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const marketplaceDoc = await transaction.get(marketplaceDocRef);
+            if (!marketplaceDoc.exists()) throw new Error("This NFT is no longer for sale.");
+
+            const sellerDoc = await transaction.get(sellerUserRef);
+            if (!sellerDoc.exists()) throw new Error("Seller account not found.");
+            
+            const buyerDoc = await transaction.get(buyerUserRef);
+            if (!buyerDoc.exists()) throw new Error("Buyer account not found.");
+            
+            const nftData = marketplaceDoc.data() as Nft;
+            const buyerData = buyerDoc.data() as UserAccount;
+
+            if (buyerData.balance < nftData.price) throw new Error("Insufficient funds.");
+
+            // Debit buyer
+            transaction.update(buyerUserRef, { balance: buyerData.balance - nftData.price });
+            // Credit seller
+            transaction.update(sellerUserRef, { balance: sellerDoc.data()!.balance + nftData.price });
+
+            // Move NFT from marketplace to buyer's inventory
+            const newInventoryData = { ...nftData, ownerId: userId, isListed: false, price: 0 };
+            transaction.set(buyerInventoryDocRef, newInventoryData);
+            transaction.delete(marketplaceDocRef);
+        });
+
+        toast({ title: "Purchase successful!", description: `You bought ${nft.name}.` });
     } catch (error: any) {
         console.error("Purchase failed:", error);
         toast({ variant: "destructive", title: "Purchase Failed", description: error.message });
@@ -222,10 +284,20 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   };
 
 
-  const isLoading = isFirebaseUserLoading || isCollectionLoading || isTelegramUserLoading;
+  const isLoading = isFirebaseUserLoading || isInventoryLoading || isMarketplaceLoading || isTelegramUserLoading;
 
   return (
-    <NftContext.Provider value={{ nfts: nftsFromDb || [], setNftStatus, isLoading, removeNftFromInventory, addNftToAuctions, placeBid, buyNft }}>
+    <NftContext.Provider value={{ 
+        inventoryNfts: inventoryNfts || [], 
+        marketplaceNfts: marketplaceNfts || [],
+        setNftForSale, 
+        removeNftFromSale,
+        isLoading, 
+        removeNftFromInventory, 
+        addNftToAuctions, 
+        placeBid, 
+        buyNft 
+    }}>
       {children}
     </NftContext.Provider>
   );
@@ -238,3 +310,5 @@ export const useNft = () => {
   }
   return context;
 };
+
+    

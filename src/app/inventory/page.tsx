@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function InventoryPage() {
-  const { nfts } = useNft();
+  const { inventoryNfts, isLoading } = useNft();
   const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -57,27 +57,11 @@ export default function InventoryPage() {
     return translation;
   };
   
-  // Set initial telegram username
   useState(() => {
     if(telegramUser?.username) {
         setTelegramUsername(`@${telegramUser.username}`);
     }
   });
-
-  const listedNfts = nfts.filter((nft) => nft.isListed);
-  const unlistedNfts = nfts.filter((nft) => !nft.isListed);
-
-  const toggleNftSelection = (nftId: string) => {
-    setSelectedNfts((prev) => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(nftId)) {
-        newSelection.delete(nftId);
-      } else {
-        newSelection.add(nftId);
-      }
-      return newSelection;
-    });
-  };
 
   const handleDeposit = async () => {
     if (!firebaseUser || !telegramUser) return;
@@ -130,7 +114,7 @@ export default function InventoryPage() {
     setIsProcessing(true);
     
     const nftId = Array.from(selectedNfts)[0];
-    const nft = nfts.find(n => n.id === nftId);
+    const nft = inventoryNfts.find(n => n.id === nftId);
 
     if (!nft) {
         setIsProcessing(false);
@@ -205,7 +189,6 @@ export default function InventoryPage() {
     );
   };
 
-  const withdrawableNfts = nfts.filter(nft => !nft.isListed);
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -238,7 +221,7 @@ export default function InventoryPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
-                {renderNftGrid(withdrawableNfts, true)}
+                {renderNftGrid(inventoryNfts, true)}
               </div>
                <div className="space-y-2 mt-4">
                   <Label htmlFor="telegram-username">Telegram Username</Label>
@@ -276,23 +259,13 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
-          <TabsTrigger value="all">
-            {t('all')} ({nfts.length})
-          </TabsTrigger>
-          <TabsTrigger value="listed">
-            {t('listed')} ({listedNfts.length})
-          </TabsTrigger>
-          <TabsTrigger value="unlisted">
-            {t('unlisted')} ({unlistedNfts.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all">
-          {nfts.length > 0 ? (
+       {isLoading ? (
+        <div className="col-span-full text-center py-16">
+            <p className="text-muted-foreground">Inventar yuklanmoqda...</p>
+        </div>
+       ) : inventoryNfts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {nfts.map((nft) => (
+              {inventoryNfts.map((nft) => (
                 <NftCard key={nft.id} nft={nft} action="manage" />
               ))}
             </div>
@@ -300,35 +273,10 @@ export default function InventoryPage() {
             <div className="col-span-full text-center py-16">
               <p className="text-muted-foreground">{t('inventoryEmpty')}</p>
             </div>
-          )}
-        </TabsContent>
-        <TabsContent value="listed">
-          {listedNfts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {listedNfts.map((nft) => (
-                <NftCard key={nft.id} nft={nft} action="manage" />
-              ))}
-            </div>
-          ) : (
-            <div className="col-span-full text-center py-16">
-              <p className="text-muted-foreground">{t('noListedNfts')}</p>
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="unlisted">
-          {unlistedNfts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {unlistedNfts.map((nft) => (
-                <NftCard key={nft.id} nft={nft} action="manage" />
-              ))}
-            </div>
-          ) : (
-            <div className="col-span-full text-center py-16">
-              <p className="text-muted-foreground">{t('noUnlistedNfts')}</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+       )}
+
     </div>
   );
 }
+
+    

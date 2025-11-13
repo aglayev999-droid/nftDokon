@@ -1,3 +1,4 @@
+
 'use client';
 import Image from 'next/image';
 import type { Nft } from '@/lib/data';
@@ -14,12 +15,7 @@ import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
   DialogTrigger,
-  DialogFooter,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import { NftDetailDialog } from './nft-detail-dialog';
 import {
@@ -48,7 +44,7 @@ interface NftCardProps {
 
 export function NftCard({ nft, action = 'buy' }: NftCardProps) {
   const { translations } = useLanguage();
-  const { setNftStatus, removeNftFromInventory, addNftToAuctions, buyNft } = useNft();
+  const { setNftForSale, removeNftFromSale, addNftToAuctions, buyNft } = useNft();
   const { user: currentUser } = useUser();
   const { toast } = useToast();
 
@@ -86,23 +82,13 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
       return;
     }
     
-    setNftStatus(nft.id, true, sellPrice);
-
-    toast({
-      title: t('listForSaleSuccessTitle'),
-      description: t('listForSaleSuccessDescription', { nftName: nft.name, price: sellPrice.toLocaleString() }),
-    });
+    setNftForSale(nft.id, sellPrice);
     setIsSellDialogOpen(false);
     setPrice('');
   };
 
   const handleUnlist = () => {
-    setNftStatus(nft.id, false);
-
-    toast({
-      title: t('unlistSuccessTitle'),
-      description: t('unlistSuccessDescription', { nftName: nft.name }),
-    });
+    removeNftFromSale(nft.id);
   };
 
   const handleProceedToAuctionStep2 = () => {
@@ -131,8 +117,8 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
 
     const auctionData: Nft = {
         ...nft,
-        isListed: true, // It's on auction, so it's listed
-        price: startingPrice, // Starting price
+        isListed: true,
+        price: startingPrice,
         startingPrice: startingPrice,
         highestBid: startingPrice,
         highestBidderId: '',
@@ -140,11 +126,7 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         endTime,
     };
     
-    // 1. Add to auctions collection
     await addNftToAuctions(auctionData);
-
-    // 2. Remove from inventory
-    await removeNftFromInventory(nft.id);
 
     toast({
       title: "Muvaffaqiyatli!",
@@ -215,7 +197,6 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
           </DialogContent>
         </Dialog>
       )}
-      {/* Auction Dialogs */}
       {!nft.isListed && (
         <Dialog open={isAuctionStep1Open} onOpenChange={setIsAuctionStep1Open}>
           <DialogTrigger asChild>
@@ -283,17 +264,11 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
             <CardTitle className="text-xl font-headline truncate">{nft.name}</CardTitle>
             <span className="text-sm font-mono text-muted-foreground">#{nftIdNumber}</span>
         </div>
-        {(action === 'buy' && nft.isListed) && (
+        {(action === 'buy' || (action === 'manage' && nft.isListed)) && (
           <div className="flex items-center gap-2 text-primary font-bold text-2xl">
             <Tag className="w-5 h-5 text-accent" />
             <span>{nft.price.toLocaleString()}</span>
             <span className="text-sm text-muted-foreground font-normal">UZS</span>
-          </div>
-        )}
-         {action === 'manage' && nft.isListed && (
-          <div className="flex items-center gap-2 text-muted-foreground text-lg">
-            <Tag className="w-4 h-4" />
-            <span>{nft.price.toLocaleString()} UZS</span>
           </div>
         )}
       </CardContent>
@@ -320,3 +295,5 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
     </Dialog>
   );
 }
+
+    

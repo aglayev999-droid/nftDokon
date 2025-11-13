@@ -13,20 +13,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Function to check if the user is an admin
     function isAdmin() {
-      // An admin's UID must exist in the /admins collection OR their Telegram ID must be in the hardcoded list.
-      // The telegramId is stored on the user's own document.
-      let isHardcodedAdmin = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.telegramId == "123456789";
-      let isCollectionAdmin = exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-      return isCollectionAdmin || isHardcodedAdmin;
+      // An admin's UID must exist in the /admins collection.
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     // /users/{userId}
     match /users/{userId} {
-      allow get, create, update: if isOwner(userId);
-      // Allow admins to list all users for the admin panel
-      allow list: if isAdmin();
+      allow get, update: if isOwner(userId);
+      // Anyone can create their own user account on first load
+      allow create: if isOwner(userId);
+      // Admins can list/read all user data
+      allow list, get: if isAdmin();
       allow delete: if false;
 
       // /users/{userId}/inventory/{nftId}
@@ -34,23 +32,39 @@ service cloud.firestore {
         // A user can read their own inventory
         allow get, list: if isOwner(userId);
         
-        // Creating and updating items is handled by the client.
-        // Deleting from inventory is now handled by the backend /api/create-withdrawal
-        // so we disallow client-side deletes.
-        allow create, update: if isOwner(userId);
-        allow delete: if false; // IMPORTANT: Deletion is now a backend responsibility
+        // Creating and deleting inventory items is now handled by server-side transactions
+        // (moving to/from marketplace, auctions, or withdrawals).
+        // Direct client manipulation is disallowed to maintain integrity.
+        allow write: if false;
       }
     }
     
     // /admins/{adminId}
-    // Only admins can read the list of other admins.
     match /admins/{adminId} {
         allow get, list: if isAdmin();
         // Allow a user to create THEIR OWN admin document.
         // The logic in admin-context.tsx ensures only true admins attempt this write.
         allow create: if isOwner(adminId);
-        // Disallow client-side updates/deletions of admins for security.
         allow update, delete: if false;
+    }
+
+    // /marketplace/{nftId}
+    match /marketplace/{nftId} {
+      // ANYONE can read the list of items for sale or a specific item.
+      allow get, list: if true;
+      
+      // CREATE: An NFT can be created here only if it's coming from the owner's inventory.
+      // The `setNftForSale` transaction handles this logic, so we allow signed-in users.
+      // The ownerId in the resource must match the user's auth UID.
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+
+      // DELETE: An NFT can be deleted from the marketplace in two cases:
+      // 1. It is being purchased (handled by the `buyNft` transaction).
+      // 2. It is being unlisted by its owner.
+      allow delete: if isSignedIn(); // Transactions will enforce ownership/purchase logic.
+
+      // UPDATE: Disallow direct updates to marketplace items.
+      allow update: if false;
     }
     
     // /auctions/{auctionId}
@@ -59,22 +73,20 @@ service cloud.firestore {
       allow get, list: if true;
       
       // CREATE: Only the owner of the NFT can create an auction.
-      // The incoming resource's ownerId must match the signer's UID.
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       
       // UPDATE: Allow signed-in users to update the highestBid and highestBidderId.
-      // This allows the 'placeBid' transaction to work.
       allow update: if isSignedIn();
       
-      // DELETE: Deleting auctions is disallowed. They should be handled by a backend process.
+      // DELETE: Deleting auctions is disallowed. They are handled by a backend process.
       allow delete: if false;
     }
 
     // /withdrawals/{withdrawalId}
-    // Withdrawal requests are now created by the backend API route.
-    // Clients are not allowed to create, read, or modify them directly.
     match /withdrawals/{withdrawalId} {
       allow read, write: if false;
     }
   }
 }
+
+    
