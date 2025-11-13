@@ -22,43 +22,50 @@ export async function POST(request: NextRequest) {
     let scriptError = '';
 
     pythonProcess.stdout.on('data', (data) => {
-      scriptOutput += data.toString();
-      console.log(`Python stdout: ${data}`);
+      const chunk = data.toString();
+      console.log(`Python stdout: ${chunk}`);
+      scriptOutput += chunk;
     });
 
     pythonProcess.stderr.on('data', (data) => {
-      scriptError += data.toString();
-      console.error(`Python stderr: ${data}`);
+      const chunk = data.toString();
+      console.error(`Python stderr: ${chunk}`);
+      scriptError += chunk;
     });
     
     // Handle spawn errors, e.g., command not found
     pythonProcess.on('error', (err) => {
         console.error('Failed to start subprocess.', err);
-        scriptError += `Failed to start script: ${err.message}. Make sure python3 is installed and in the system's PATH.`;
+        // Combine with other errors to provide full context
+        scriptError = `Failed to start script: ${err.message}. Make sure python3 is installed and in the system's PATH. ${scriptError}`;
     });
 
     const scriptResult = await new Promise<{ success: boolean; message: string }>((resolve) => {
         pythonProcess.on('close', (code) => {
             console.log(`Python script exited with code ${code}`);
+            // Success is now strictly defined by the exit code and a success message in the output.
             if (code === 0 && scriptOutput.includes('✅ Gift muvaffaqiyatli yuborildi')) {
-                resolve({ success: true, message: 'Sovg\'a muvaffaqiyatli yuborildi.' });
+                resolve({ success: true, message: scriptOutput });
             } else {
-                // Prepend spawn error if it exists
-                resolve({ success: false, message: scriptError || scriptOutput || 'Skriptni ishga tushirishda noma\'lum xatolik.' });
+                // Combine stderr and stdout for a comprehensive error message.
+                const fullError = (scriptError || 'Script produced an error.') + `\n--- Output ---\n` + (scriptOutput || 'No output.');
+                resolve({ success: false, message: fullError });
             }
         });
     });
 
     // 2. Agar skript muvaffaqiyatsiz bo'lsa, jarayonni to'xtatish
     if (!scriptResult.success) {
-      // Skriptdagi keng tarqalgan xatolarni aniqlash
+      // Skriptdagi keng tarqalgan xatolarni aniqlash va foydalanuvchiga tushunarli qilib ko'rsatish
       if (scriptResult.message.includes('telethon.errors.rpcerrorlist.UserNotMutualContactError')) {
            return NextResponse.json({ ok: false, error: 'Xatolik: Bot sizning kontaktingizda emas. Iltimos, botni kontaktingizga qo\'shing.' }, { status: 400 });
       }
        if (scriptResult.message.includes('JSON bo\'sh giftlarni qidiryapman')) {
            return NextResponse.json({ ok: false, error: 'Hozircha yuborish uchun sovg\'alar qolmadi. Iltimos, keyinroq urinib ko\'ring.' }, { status: 400 });
       }
-      return NextResponse.json({ ok: false, error: `Sovg'ani yuborishda xatolik: ${scriptResult.message}` }, { status: 500 });
+      // For other errors, return a generic message but log the detailed one.
+      console.error(`Full Python script error for withdrawal: ${scriptResult.message}`);
+      return NextResponse.json({ ok: false, error: `Sovg'ani yuborishda noma'lum xatolik yuz berdi. Administrator bilan bog'laning.` }, { status: 500 });
     }
 
 

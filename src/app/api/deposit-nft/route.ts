@@ -1,7 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
-import * as admin from 'firebase-admin';
 import { spawn } from 'child_process';
 import path from 'path';
 import sqlite3 from 'sqlite3';
@@ -60,11 +59,10 @@ function getLatestGiftFromDb(): Promise<GiftFromDb | null> {
         });
 
         db.get('SELECT * FROM gifts ORDER BY inserted_at DESC LIMIT 1', [], (err, row: GiftFromDb) => {
+            db.close();
             if (err) {
-                db.close();
                 return reject(new Error(`Failed to query SQLite DB: ${err.message}`));
             }
-            db.close();
             resolve(row || null);
         });
     });
@@ -82,9 +80,11 @@ function deleteGiftFromDb(id: number): Promise<void> {
                  return reject(new Error(`Failed to delete row from SQLite DB: ${err.message}`));
             }
             if (this.changes === 0) {
-                 return reject(new Error(`Row with id ${id} not found in SQLite DB.`));
+                 // This is not a critical error, just a log.
+                 console.warn(`Row with id ${id} not found in SQLite DB for deletion.`);
+            } else {
+                console.log(`Successfully deleted row ${id} from mon.db`);
             }
-            console.log(`Successfully deleted row ${id} from mon.db`);
             resolve();
         });
     });
@@ -104,7 +104,8 @@ export async function POST(request: NextRequest) {
     const scriptResult = await runPythonScript(scriptPath, ['scan']);
 
     if (scriptResult.code !== 0) {
-      return NextResponse.json({ ok: false, error: `Sovg'alarni skanerlashda xatolik yuz berdi: ${scriptResult.error}` }, { status: 500 });
+      console.error(`Full Python script error for deposit: ${scriptResult.error}`);
+      return NextResponse.json({ ok: false, error: `Sovg'alarni skanerlashda xatolik yuz berdi. Administrator bilan bog'laning.` }, { status: 500 });
     }
     
     // 2. Read the latest gift from the SQLite DB
@@ -116,7 +117,10 @@ export async function POST(request: NextRequest) {
 
     // Check if the sender of the gift matches the user who made the request
     if (latestGift.sender_id !== telegramUserId) {
-         return NextResponse.json({ ok: false, error: `Topilgan so'nggi sovg'a sizga tegishli emas. U boshqa foydalanuvchi (${latestGift.sender_id}) tomonidan yuborilgan.` }, { status: 403 });
+         // Even if it's not for this user, we should consider clearing it to avoid it being picked up by the next user.
+         // However, another user might be trying to claim it. For now, we leave it but warn.
+         console.warn(`Latest gift sender (${latestGift.sender_id}) does not match requestor (${telegramUserId}).`);
+         return NextResponse.json({ ok: false, error: `Topilgan so'nggi sovg'a sizga tegishli emas. U boshqa foydalanuvchi tomonidan yuborilgan. Iltimos, qayta urinib ko'ring.` }, { status: 403 });
     }
 
     // 3. Prepare the NFT data for Firestore
@@ -126,26 +130,30 @@ export async function POST(request: NextRequest) {
     const docSnapshot = await inventoryItemRef.get();
     if(docSnapshot.exists) {
         console.log(`NFT with ID ${newNftId} already exists in user's inventory. Skipping.`);
-        // Optionally, delete it from sqlite db anyway
+        // IMPORTANT: Delete it from sqlite db anyway to prevent it from being processed again.
         await deleteGiftFromDb(latestGift.id);
         return NextResponse.json({ ok: true, message: 'Bu sovg\'a allaqachon inventaringizda mavjud.' });
     }
 
     // Map rarity based on value or model
     let rarity: Nft['rarity'] = 'Common';
-    if (latestGift.model.toLowerCase().includes('rare')) rarity = 'Rare';
-    if (latestGift.model.toLowerCase().includes('epic')) rarity = 'Epic';
-    if (latestGift.model.toLowerCase().includes('legendary')) rarity = 'Legendary';
+    if (latestGift.model?.toLowerCase().includes('rare')) rarity = 'Rare';
+    if (latestGift.model?.toLowerCase().includes('epic')) rarity = 'Epic';
+    if (latestGift.model?.toLowerCase().includes('legendary')) rarity = 'Legendary';
     
+    const nftName = latestGift.title || 'Nomsiz Sovg\'a';
+    const nftNum = latestGift.num || '0';
+    const slug = nftName.toLowerCase().replace(/ /g, '');
+
     const newNftData: Omit<Nft, 'id'> = {
-        name: latestGift.title || 'Nomsiz Sovg\'a',
+        name: nftName,
         price: 0, // Not for sale by default
         rarity: rarity,
         collection: 'TON Treasures', // Default collection, can be improved
         model: latestGift.model,
         background: latestGift.backdrop,
-        imageUrl: `https://nft.fragment.com/gift/${latestGift.title.toLowerCase().replace(/ /g, '')}-${latestGift.num}.png`,
-        lottieUrl: `https://nft.fragment.com/gift/${latestGift.title.toLowerCase().replace(/ /g, '')}-${latestGift.num}.tgs`,
+        imageUrl: `https://nft.fragment.com/gift/${slug}-${nftNum}.png`,
+        lottieUrl: `https://nft.fragment.com/gift/${slug}-${nftNum}.tgs`,
         imageHint: 'telegram gift',
         isListed: false,
         ownerId: userId,
