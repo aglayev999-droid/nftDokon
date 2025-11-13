@@ -9,7 +9,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 // Add the Telegram username of admins here
 const ADMIN_USERNAMES: string[] = []; 
 // Add the Telegram ID of admins here
-const ADMIN_IDS: number[] = []; 
+const ADMIN_IDS: number[] = [816924626, 7275593552]; 
 
 interface AdminContextType {
   isAdmin: boolean;
