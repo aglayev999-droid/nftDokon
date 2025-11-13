@@ -18,7 +18,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, writeBatch, runTransaction, getDoc, Transaction, getDocs } from 'firebase/firestore';
+import { collection, doc, writeBatch, runTransaction, getDoc, Transaction, getDocs, FirestoreError } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
@@ -88,8 +88,16 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
                 transaction.set(newNftRef, { ...nft, ownerId: userId });
             });
         }
-    }).catch(error => {
+    }).catch((error: FirestoreError) => {
         console.error("Error bootstrapping user or inventory:", error);
+         if (error.code === 'permission-denied') {
+            const contextualError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'write', 
+                requestResourceData: { userId, telegramUser }
+            });
+            errorEmitter.emit('permission-error', contextualError);
+        }
     });
 
   }, [userId, telegramUser, firestore, isFirebaseUserLoading, isTelegramUserLoading]);
