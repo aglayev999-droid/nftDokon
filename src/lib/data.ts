@@ -31,52 +31,19 @@ export interface Nft {
   startingPrice?: number;
 }
 
-export const nftsData: Nft[] = [
-    {
-        id: 'fresh-socks-1111',
-        name: 'Fresh Socks 1111',
-        price: 0,
-        rarity: 'Rare',
-        collection: 'Fresh Socks',
-        model: 'Rare',
-        background: 'Holographic',
-        imageUrl: '', // Rasm yo'q
-        lottieUrl: 'https://nft.fragment.com/gift/freshsocks-1111.json',
-        imageHint: 'animated socks',
-        isListed: false,
-        ownerId: '',
-    },
-    {
-        id: 'plush-pepe-222',
-        name: 'Plush Pepe 222',
-        price: 0,
-        rarity: 'Epic',
-        collection: 'Plush Pepe',
-        model: 'pumpkin',
-        background: 'onyx black',
-        symbol: 'illuminati',
-        imageUrl: '', // Rasm yo'q
-        lottieUrl: 'https://nft.fragment.com/gift/plushpepe-222.json',
-        imageHint: 'cartoon frog',
-        isListed: false,
-        ownerId: '',
-    },
-    {
-        id: 'plush-pepe-777',
-        name: 'Plush Pepe 777',
-        price: 0,
-        rarity: 'Legendary',
-        collection: 'Plush Pepe',
-        model: 'pumpkin',
-        background: 'Rainbow',
-        symbol: 'illuminati',
-        imageUrl: '', // Rasm yo'q
-        lottieUrl: 'https://nft.fragment.com/gift/plushpepe-777.json',
-        imageHint: 'cartoon frog',
-        isListed: false,
-        ownerId: '',
-    },
-];
+export interface WithdrawalRequest {
+    userId: string;
+    telegramUsername: string;
+    nftId: string;
+    nftName: string;
+    status: 'completed' | 'pending';
+    requestedAt: any; // Firestore Timestamp
+    completedAt: any; // Firestore Timestamp
+}
+
+
+// This is now empty. NFTs are only added via the deposit flow.
+export const nftsData: Nft[] = [];
 
 // Auction data is now managed in Firestore, so this can be empty.
 export const auctionNfts: Nft[] = [];

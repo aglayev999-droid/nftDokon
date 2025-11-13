@@ -10,12 +10,10 @@ interface LottiePlayerProps {
 export function LottiePlayer({ src }: LottiePlayerProps) {
   return (
     <Lottie
-      path={src}
+      path={src} // Use `path` for URLs
       loop={true}
       autoplay={true}
       style={{ width: '100%', height: '100%' }}
-      // Show skeleton while loading
-      onDataReady={() => {}} 
     />
   );
 }

@@ -18,7 +18,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, writeBatch, runTransaction, getDoc, Transaction, getDocs, FirestoreError, doc as createDocRef, WithFieldValue } from 'firebase/firestore';
+import { collection, doc, writeBatch, runTransaction, getDoc, Transaction, getDocs, FirestoreError, doc as createDocRef, WithFieldValue, collection as getCollectionRef, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
@@ -53,7 +53,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
   const { data: nftsFromDb, isLoading: isCollectionLoading } =
     useCollection<Nft>(inventoryRef);
 
-  // Effect to bootstrap user data and initial NFTs
+  // Effect to bootstrap user data
   useEffect(() => {
     if (!userId || !telegramUser || isFirebaseUserLoading || isTelegramUserLoading || !firestore) {
       return;
@@ -64,35 +64,20 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
     runTransaction(firestore, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
         
-        const userAccountData: WithFieldValue<UserAccount> = {
-            id: userId,
-            telegramId: String(telegramUser.id),
-            username: telegramUser.username || telegramUser.first_name,
-            fullName: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-            balance: 1000000, // Generous starting balance
-        };
-        
         // Bootstrap user account if it doesn't exist
         if (!userDoc.exists()) {
+             const userAccountData: WithFieldValue<UserAccount> = {
+                id: userId,
+                telegramId: String(telegramUser.id),
+                username: telegramUser.username || telegramUser.first_name,
+                fullName: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+                balance: 1000000, // Generous starting balance
+            };
             console.log(`User document for ${userId} does not exist, bootstrapping...`);
             transaction.set(userDocRef, userAccountData);
         }
-
-        // Check if inventory is empty, if so, add initial NFTs
-        // We must query within the transaction to ensure atomicity
-        const userInventoryRef = collection(userDocRef, 'inventory');
-        const inventorySnapshot = await getDocs(userInventoryRef);
-        
-        if (inventorySnapshot.empty) {
-            console.log(`Inventory for user ${userId} is empty, adding initial NFTs.`);
-            initialNfts.forEach(nft => {
-                const newNftRef = createDocRef(userInventoryRef, nft.id);
-                // Assign the current user as the owner
-                transaction.set(newNftRef, { ...nft, ownerId: userId });
-            });
-        }
     }).catch((error: FirestoreError) => {
-        console.error("Error bootstrapping user or inventory:", error);
+        console.error("Error bootstrapping user:", error);
          if (error.code === 'permission-denied') {
             const contextualError = new FirestorePermissionError({
                 path: userDocRef.path,
@@ -253,5 +238,3 @@ export const useNft = () => {
   }
   return context;
 };
-
-    

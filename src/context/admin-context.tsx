@@ -7,9 +7,9 @@ import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 // Add the Telegram username of admins here
-const ADMIN_USERNAMES = ['nullprime', 'devuser']; 
+const ADMIN_USERNAMES: string[] = []; 
 // Add the Telegram ID of admins here
-const ADMIN_IDS = [123456789]; // devuser's ID for testing
+const ADMIN_IDS: number[] = []; 
 
 interface AdminContextType {
   isAdmin: boolean;
