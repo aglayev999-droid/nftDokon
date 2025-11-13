@@ -1,3 +1,4 @@
+
 'use client';
 import {
   AlertDialog,
@@ -30,7 +31,7 @@ import {
 import { useNft } from '@/context/nft-context';
 import { useUser, useFirestore, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { useTelegramUser } from '@/context/telegram-user-context';
-import { collection, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -96,6 +97,9 @@ export default function InventoryPage() {
     
     const batch = writeBatch(firestore);
 
+    // Prepare a sample of the data for potential error reporting
+    let sampleWithdrawalData = {};
+
     for (const nftId of selectedNftIds) {
       const nft = nfts.find(n => n.id === nftId);
       if (nft) {
@@ -107,6 +111,11 @@ export default function InventoryPage() {
           status: 'pending',
           requestedAt: serverTimestamp(),
         };
+
+        if(Object.keys(sampleWithdrawalData).length === 0) {
+            sampleWithdrawalData = withdrawalData;
+        }
+
         const newWithdrawalRef = doc(withdrawalsRef); // Create a ref with a new ID
         batch.set(newWithdrawalRef, withdrawalData);
 
@@ -125,18 +134,12 @@ export default function InventoryPage() {
 
     } catch (error: any) {
         if (error.code === 'permission-denied') {
-            const firstNft = nfts.find(n => n.id === selectedNftIds[0]);
-            const sampleWithdrawalData = {
-                userId: firebaseUser.uid,
-                telegramUsername: telegramUsername,
-                nftId: firstNft?.id,
-                nftName: firstNft?.name,
-                status: 'pending',
-            };
+            // A batch write can fail on any of its operations.
+            // We'll report the error on the 'withdrawals' collection as that's the most likely culprit.
             const contextualError = new FirestorePermissionError({
-                path: 'withdrawals', // Path of the collection
-                operation: 'create',
-                requestResourceData: sampleWithdrawalData,
+                path: 'withdrawals', // Path of the collection for creating requests
+                operation: 'create', // The operation within the batch that likely failed
+                requestResourceData: sampleWithdrawalData, // Show sample data for context
             });
             errorEmitter.emit('permission-error', contextualError);
         } else {
@@ -317,5 +320,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-
-    
