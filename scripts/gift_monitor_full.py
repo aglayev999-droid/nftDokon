@@ -8,15 +8,26 @@ import asyncio
 import sqlite3
 import hashlib
 import sys
+import os
 from datetime import datetime
 from telethon import TelegramClient, events
 from telethon.tl.types import MessageService, MessageActionStarGiftUnique
+from dotenv import load_dotenv
 
-API_ID = 16108895
-API_HASH = "9eeedcc1eb10e1f0a11caf3815a3768d"
+# .env faylidagi o'zgaruvchilarni yuklash
+load_dotenv()
+
+# my.telegram.org saytidan olingan shaxsiy API ma'lumotlari
+API_ID = os.getenv("TELEGRAM_API_ID")
+API_HASH = os.getenv("TELEGRAM_API_HASH")
+
 SESSION_FILE = "owner.session"
 DB_PATH = "mon.db"
 LIMIT_PER_CHAT = 100  # har bir foydalanuvchidan 100 ta xabar tekshiriladi
+
+if not API_ID or not API_HASH:
+    print("XATOLIK: .env faylida TELEGRAM_API_ID va TELEGRAM_API_HASH o'zgaruvchilarini sozlang.")
+    sys.exit(1)
 
 # === SQLite baza tayyorlash ===
 conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -204,7 +215,7 @@ async def monitor_new(event):
 
 # === Asosiy ishga tushirish ===
 async def main(mode):
-    client = TelegramClient(SESSION_FILE, API_ID, API_HASH)
+    client = TelegramClient(SESSION_FILE, int(API_ID), API_HASH)
     await client.start()
     print("🟢 Telegram session ulandi.\n")
     
@@ -223,7 +234,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1].lower() == "listen":
         run_mode = "listen"
     
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(run_mode))
-
-    
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(main(run_mode))
+    # Using asyncio.run() is simpler and safer
+    asyncio.run(main(run_mode))

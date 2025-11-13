@@ -2,14 +2,25 @@
 import json
 import asyncio
 import sys
+import os
 from telethon import TelegramClient, functions, types, errors
+from dotenv import load_dotenv
 
-api_id = 16108895
-api_hash = "9eeedcc1eb10e1f0a11caf3815a3768d"
+# .env faylidagi o'zgaruvchilarni yuklash
+load_dotenv()
+
+# my.telegram.org saytidan olingan shaxsiy API ma'lumotlari
+api_id = os.getenv("TELEGRAM_API_ID")
+api_hash = os.getenv("TELEGRAM_API_HASH")
+
 session_file = "owner.session"
 gift_db_file = "savegifts.json"
 
-client = TelegramClient(session_file, api_id, api_hash)
+if not api_id or not api_hash:
+    print("XATOLIK: .env faylida TELEGRAM_API_ID va TELEGRAM_API_HASH o'zgaruvchilarini sozlang.")
+    sys.exit(1)
+
+client = TelegramClient(session_file, int(api_id), api_hash)
 
 
 async def fetch_real_saved_gifts():
@@ -95,5 +106,32 @@ async def main():
     await transfer_gift(target_username)
 
 
-with client:
-    client.loop.run_until_complete(main())
+async def initialize_session():
+    """Faqat sessiya yaratish uchun ishga tushiriladigan funksiya"""
+    print("Sessiya faylini yaratish uchun tizimga kirilmoqda...")
+    await client.send_message('me', 'Sessiya yaratildi!')
+    print("✅ Sessiya muvaffaqiyatli yaratildi va 'owner.session' fayliga saqlandi.")
+
+
+if __name__ == "__main__":
+    async def run():
+        await client.connect()
+        if not await client.is_user_authorized():
+            print("Avtorizatsiyadan o'tilmagan. Iltimos, telefon raqamingiz va kodni kiriting.")
+            # Bu yerda interaktiv tarzda telefon raqam va kod so'rash mantiqini qo'shish mumkin,
+            # ammo hozircha dastlabki ishga tushirish uchun qo'lda avtorizatsiya qilish tavsiya etiladi.
+            # `python -c "import asyncio; from scripts.auto_relayer import initialize_session; asyncio.run(initialize_session())"`
+            # buyrug'i orqali sessiya yarating.
+            print("Iltimos, avval sessiya faylini yarating.")
+            return
+
+        # Skript argumentlar bilan ishga tushirilgan bo'lsa, asosiy mantiqni bajarish
+        if len(sys.argv) > 1:
+            await main()
+        else:
+             # Agar argument bo'lmasa, sessiya yaratish yo'riqnomasini ko'rsatish
+            print("Argumentlar yo'q. Skript to'g'ri ishga tushirilganiga ishonch hosil qiling.")
+            print("Sessiya yaratish uchun: python -c \"from scripts.auto_relayer import client; client.start()\"")
+
+
+    client.loop.run_until_complete(run())

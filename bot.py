@@ -3,15 +3,16 @@ import os
 import asyncio
 from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from dotenv import load_dotenv
+
+# .env faylidagi o'zgaruvchilarni yuklash
+load_dotenv()
 
 # --- SOZLAMALAR ---
-# Bu yerga @BotFather orqali olingan o'z bot tokeningizni qo'ying
-# Yoki serverda muhit o'zgaruvchisi (environment variable) sifatida saqlang
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8108408790:AAHEhCXQXaaZEbQeZfGblqvWKwhNLOfxDco") 
-# Xabarlar yuborilishi kerak bo'lgan akkauntning Telegram ID raqami
-ADMIN_CHAT_ID = os.environ.get("TELEGRAM_ADMIN_CHAT_ID", "7275593552")
-# Veb-saytingizning to'liq manzili, "https://" bilan boshlanishi shart
-WEB_APP_URL = "https://nftdokon.onrender.com" 
+# @BotFather orqali olingan bot tokeni
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") 
+# Web App joylashtirilgan manzil
+WEB_APP_URL = os.getenv("WEB_APP_URL")
 
 # --- ASOSIY FUNKSIYALAR ---
 
@@ -43,8 +44,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Botni ishga tushiradi va /start buyrug'ini kutadi."""
     
-    if not BOT_TOKEN or not ADMIN_CHAT_ID:
-        print("XATOLIK: Iltimos, BOT_TOKEN va ADMIN_CHAT_ID o'zgaruvchilarini sozlang (bot.py yoki environment variables).")
+    if not BOT_TOKEN or not WEB_APP_URL:
+        print("XATOLIK: Iltimos, .env faylida TELEGRAM_BOT_TOKEN va WEB_APP_URL o'zgaruvchilarini sozlang.")
         return
 
     application = ApplicationBuilder().token(BOT_TOKEN).build()
