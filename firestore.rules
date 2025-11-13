@@ -12,11 +12,19 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    // Function to check if the user is an admin
+    function isAdmin() {
+      // An admin's UID must exist in the /admins collection.
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
 
     // /users/{userId}
     match /users/{userId} {
       allow get, create, update: if isOwner(userId);
-      allow list, delete: if false;
+      // Allow admins to list all users for the admin panel
+      allow list: if isAdmin();
+      allow delete: if false;
 
       // /users/{userId}/inventory/{nftId}
       match /inventory/{nftId} {
@@ -28,6 +36,14 @@ service cloud.firestore {
         // which creates a request document. The client can delete its own item.
         allow create, update, delete: if isOwner(userId);
       }
+    }
+    
+    // /admins/{adminId}
+    // Only admins can read the list of other admins.
+    match /admins/{adminId} {
+        allow get, list: if isAdmin();
+        // Disallow client-side creation/deletion of admins for security.
+        allow create, update, delete: if false;
     }
     
     // /auctions/{auctionId}
