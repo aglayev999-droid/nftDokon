@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { NftCard } from '@/components/nft-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Nft } from '@/lib/data';
-import { PlusCircle, Upload, Send } from 'lucide-react';
+import { PlusCircle, Upload, Send, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/context/language-context';
 import {
@@ -29,7 +29,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useNft } from '@/context/nft-context';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useTelegramUser } from '@/context/telegram-user-context';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ export default function InventoryPage() {
   const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDepositing, setIsDepositing] = useState(false);
   const [telegramUsername, setTelegramUsername] = useState('');
   const { translations } = useLanguage();
   const { user: firebaseUser } = useUser();
@@ -78,6 +79,43 @@ export default function InventoryPage() {
     });
   };
 
+  const handleDeposit = async () => {
+    if (!firebaseUser || !telegramUser) return;
+    
+    setIsDepositing(true);
+    try {
+        const response = await fetch('/api/deposit-nft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: firebaseUser.uid,
+                telegramUserId: telegramUser.id,
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Serverda noma'lum xatolik yuz berdi.");
+        }
+        
+        toast({
+            title: "Muvaffaqiyatli!",
+            description: result.message,
+        });
+
+    } catch (error: any) {
+        console.error("Depositda xato:", error);
+        toast({
+            variant: "destructive",
+            title: "Xatolik",
+            description: error.message || "So'rovni yuborishda xatolik yuz berdi.",
+        });
+    } finally {
+        setIsDepositing(false);
+    }
+  }
+
   const handleWithdraw = async () => {
     if (selectedNfts.size === 0 || !firebaseUser) return;
     if (!telegramUsername || !telegramUsername.startsWith('@')) {
@@ -91,7 +129,6 @@ export default function InventoryPage() {
 
     setIsProcessing(true);
     
-    // Process one NFT at a time for simplicity and clearer feedback
     const nftId = Array.from(selectedNfts)[0];
     const nft = nfts.find(n => n.id === nftId);
 
@@ -119,16 +156,12 @@ export default function InventoryPage() {
         }
         
         toast({
-            title: "So'rov yuborildi",
-            description: `"${nft.name}" uchun yechib olish so'rovi adminga yuborildi.`,
+            title: "Muvaffaqiyatli!",
+            description: result.message,
         });
         
-        // Remove the processed NFT from selection
-        setSelectedNfts(prev => {
-            const newSelection = new Set(prev);
-            newSelection.delete(nftId);
-            return newSelection;
-        });
+        setSelectedNfts(new Set());
+        setIsWithdrawDialogOpen(false);
 
     } catch (error: any) {
         console.error("Yechib olishda xato:", error);
@@ -138,12 +171,7 @@ export default function InventoryPage() {
             description: error.message || "So'rovni yuborishda xatolik yuz berdi. Iltimos, keyinroq yana urinib ko'ring.",
         });
     } finally {
-        // If there are more NFTs to process, we could continue here,
-        // but for now, we'll just stop after the first one.
         setIsProcessing(false);
-        // We close the dialog after one attempt.
-        setIsWithdrawDialogOpen(false);
-        setSelectedNfts(new Set());
     }
   };
 
@@ -186,25 +214,14 @@ export default function InventoryPage() {
           {t('myInventory')}
         </h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={handleDeposit} disabled={isDepositing}>
+              {isDepositing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
                 <PlusCircle className="mr-2 h-4 w-4" />
-                {t('addOrMint')}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t('addNft')}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('addNftDescription')}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogAction>{t('understood')}</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              )}
+              {t('addOrMint')}
+          </Button>
 
           <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
             <DialogTrigger asChild>
@@ -246,12 +263,12 @@ export default function InventoryPage() {
                   disabled={selectedNfts.size !== 1 || !telegramUsername || isProcessing}
                   onClick={handleWithdraw}
                 >
-                  {isProcessing ? 'Yuborilmoqda...' : (
-                    <>
-                      <Send className="mr-2 h-4 w-4" />
-                      {t('withdrawNSelected', { count: selectedNfts.size })}
-                    </>
+                  {isProcessing ? (
+                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
                   )}
+                   {isProcessing ? 'Yuborilmoqda...' : t('withdrawNSelected', { count: selectedNfts.size })}
                 </Button>
               </DialogFooter>
             </DialogContent>
