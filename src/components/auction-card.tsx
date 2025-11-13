@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -83,13 +82,9 @@ export function AuctionCard({ nft }: AuctionCardProps) {
           {nft.lottieUrl ? (
             <LottiePlayer src={nft.lottieUrl} />
           ) : (
-            <Image
-              src={nft.imageUrl}
-              alt={nft.name}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              data-ai-hint={nft.imageHint}
-            />
+            <div className="w-full h-full bg-secondary flex items-center justify-center">
+                <span className="text-muted-foreground text-xs">No Animation</span>
+            </div>
           )}
         </div>
       </CardHeader>

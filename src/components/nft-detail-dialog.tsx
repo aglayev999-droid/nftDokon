@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -92,13 +91,9 @@ export function NftDetailDialog({ nft, action = 'buy' }: NftDetailDialogProps) {
         {nft.lottieUrl ? (
             <LottiePlayer src={nft.lottieUrl} />
           ) : (
-            <Image
-              src={nft.imageUrl}
-              alt={nft.name}
-              fill
-              className="object-cover rounded-2xl"
-              data-ai-hint={nft.imageHint}
-            />
+            <div className="w-full h-full bg-secondary flex items-center justify-center rounded-2xl">
+                <span className="text-muted-foreground text-sm">No Animation</span>
+            </div>
         )}
       </div>
       <div className="p-6 space-y-4">

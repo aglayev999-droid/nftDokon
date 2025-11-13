@@ -269,13 +269,9 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
           {nft.lottieUrl ? (
             <LottiePlayer src={nft.lottieUrl} />
           ) : (
-            <Image
-              src={nft.imageUrl}
-              alt={nft.name}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              data-ai-hint={nft.imageHint}
-            />
+             <div className="w-full h-full bg-secondary flex items-center justify-center">
+                <span className="text-muted-foreground text-xs">No Animation</span>
+            </div>
           )}
           <div className="absolute top-2 right-2 bg-background/70 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-bold text-accent">
             {nft.rarity}

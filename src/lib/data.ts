@@ -13,7 +13,7 @@ export interface Nft {
   name: string;
   price: number;
   rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
-  collection: 'Crypto Critters' | 'Pixel Presents' | 'TON Treasures' | 'Plush Pepe';
+  collection: 'Crypto Critters' | 'Pixel Presents' | 'TON Treasures' | 'Plush Pepe' | 'Fresh Socks';
   model: 'Common' | 'Rare' | 'Epic' | 'pumpkin'; // Updated model
   background: 'Space' | 'Neon' | 'Holographic' | 'Rainbow' | 'onyx black'; // Updated background
   symbol?: 'illuminati' | string; // New field for symbol
@@ -33,19 +33,48 @@ export interface Nft {
 
 export const nftsData: Nft[] = [
     {
-        id: 'plush-pepe-1',
-        name: 'Plush Pepe 1',
-        price: 0, // Not listed for sale initially
+        id: 'fresh-socks-1111',
+        name: 'Fresh Socks 1111',
+        price: 0,
         rarity: 'Rare',
+        collection: 'Fresh Socks',
+        model: 'Rare',
+        background: 'Holographic',
+        imageUrl: '', // Rasm yo'q
+        lottieUrl: 'https://nft.fragment.com/gift/freshsocks-1111.json',
+        imageHint: 'animated socks',
+        isListed: false,
+        ownerId: '',
+    },
+    {
+        id: 'plush-pepe-222',
+        name: 'Plush Pepe 222',
+        price: 0,
+        rarity: 'Epic',
         collection: 'Plush Pepe',
         model: 'pumpkin',
         background: 'onyx black',
         symbol: 'illuminati',
-        imageUrl: 'https://nft.fragment.com/gift/plushpepe-1.png',
-        lottieUrl: 'https://nft.fragment.com/gift/plushpepe-1.tgs',
+        imageUrl: '', // Rasm yo'q
+        lottieUrl: 'https://nft.fragment.com/gift/plushpepe-222.json',
         imageHint: 'cartoon frog',
         isListed: false,
-        ownerId: '', // Owner will be set by the context
+        ownerId: '',
+    },
+    {
+        id: 'plush-pepe-777',
+        name: 'Plush Pepe 777',
+        price: 0,
+        rarity: 'Legendary',
+        collection: 'Plush Pepe',
+        model: 'pumpkin',
+        background: 'Rainbow',
+        symbol: 'illuminati',
+        imageUrl: '', // Rasm yo'q
+        lottieUrl: 'https://nft.fragment.com/gift/plushpepe-777.json',
+        imageHint: 'cartoon frog',
+        isListed: false,
+        ownerId: '',
     },
 ];
 
