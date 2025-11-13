@@ -11,10 +11,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserAccount } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
+  const { toast } = useToast();
   
   const { user: telegramUser, isLoading: isTelegramLoading } = useTelegramUser();
   const { user: firebaseUser, isUserLoading: isFirebaseLoading } = useUser();
@@ -31,14 +33,18 @@ export default function ProfilePage() {
 
   const isLoading = isTelegramLoading || isFirebaseLoading || isUserAccountLoading;
 
-  const referralLink = `https://nftkerak.com/join?ref=${telegramUser?.username || telegramUser?.id}`;
+  const botName = "nftkerakbot"; // Replace with your bot's actual username
+  const referralLink = `https://t.me/${botName}?start=ref_${telegramUser?.id}`;
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
-    // You can add a toast notification here to confirm copy
+    toast({
+      title: t('copied'),
+      description: t('referralLinkCopied'),
+    });
   };
 
-  if (isLoading || !telegramUser) {
+  if (isLoading || !telegramUser || !userAccount) {
     return (
       <div className="container mx-auto max-w-2xl py-8 px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="flex flex-col items-center gap-4">
@@ -58,25 +64,25 @@ export default function ProfilePage() {
   }
 
   const userStats = { 
-    volume: userAccount?.balance || 0, // Using balance as a stand-in for volume for now
-    bought: 0, // This needs to be tracked in Firestore
-    sold: 0, // This needs to be tracked in Firestore
-    portalsLevel: 0, // This needs to be tracked in Firestore
-    referrals: 0, // This needs to be tracked in Firestore
-    friendsVolume: 0, // This needs to be tracked in Firestore
+    volume: userAccount?.tradeVolume || 0,
+    bought: userAccount?.nftsBought || 0,
+    sold: userAccount?.nftsSold || 0,
+    portalsLevel: 0,
+    referrals: userAccount?.referrals || 0,
+    friendsVolume: userAccount?.referralEarnings || 0,
   };
 
-  const displayName = telegramUser.last_name 
-    ? `${telegramUser.first_name} ${telegramUser.last_name}`
-    : telegramUser.first_name;
+  const displayName = userAccount.fullName;
+  const username = userAccount.username;
+  const photoUrl = telegramUser.photo_url;
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center gap-4 mb-8">
         <div className="relative">
-          {telegramUser.photo_url ? (
+          {photoUrl ? (
             <Image
-              src={telegramUser.photo_url}
+              src={photoUrl}
               alt={displayName}
               width={96}
               height={96}
@@ -85,7 +91,7 @@ export default function ProfilePage() {
           ) : (
             <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center">
               <span className="text-4xl font-bold text-primary-foreground">
-                {telegramUser.first_name.charAt(0).toUpperCase()}
+                {displayName.charAt(0).toUpperCase()}
               </span>
             </div>
           )}
@@ -93,8 +99,8 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-bold font-headline text-center">
           {displayName}
         </h1>
-        {telegramUser.username && (
-            <p className="text-muted-foreground">@{telegramUser.username}</p>
+        {username && (
+            <p className="text-muted-foreground">@{username}</p>
         )}
       </div>
 
@@ -144,7 +150,7 @@ export default function ProfilePage() {
                    <div className="w-4 h-4 font-bold text-center">UZS</div>
                    <span>{t('earned')}</span>
                 </div>
-                <p className="font-bold text-lg">{userStats.friendsVolume}</p>
+                <p className="font-bold text-lg">{userStats.friendsVolume.toLocaleString()}</p>
              </div>
              <div>
                 <div className="flex items-center gap-2 text-muted-foreground">

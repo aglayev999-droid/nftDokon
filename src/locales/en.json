@@ -109,6 +109,7 @@
   "ok": "OK",
   "copied": "Copied",
   "copiedToClipboard": "has been copied to clipboard.",
+  "referralLinkCopied": "Referral link copied to clipboard.",
   "error": "Error",
   "enterValidAmount": "Please enter a valid amount.",
   "username": "Username",

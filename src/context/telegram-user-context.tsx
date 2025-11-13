@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -30,35 +31,47 @@ export const TelegramUserProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      
-      if (tg.initDataUnsafe?.user) {
-        setUser(tg.initDataUnsafe.user);
-        setIsTelegram(true);
-      } else {
-        // For development outside Telegram
-        setUser({
-          id: 123456789,
-          first_name: 'Dev',
-          last_name: 'User',
-          username: 'devuser',
-          photo_url: 'https://picsum.photos/seed/dev/200/200',
-        });
-      }
-      setIsLoading(false);
+    const initializeTelegram = () => {
+        if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Expand the viewport
+            tg.expand();
+            
+            setIsTelegram(true);
+            if (tg.initDataUnsafe?.user) {
+                setUser(tg.initDataUnsafe.user);
+            } else {
+                 // Fallback for browsers or if user data is not available
+                setUser({
+                    id: 987654321,
+                    first_name: 'Web',
+                    last_name: 'User',
+                    username: 'web_user',
+                    photo_url: `https://picsum.photos/seed/webuser/200/200`,
+                });
+            }
+        } else {
+             // Fallback for non-Telegram environments
+            setUser({
+                id: 987654321,
+                first_name: 'Web',
+                last_name: 'User',
+                username: 'web_user',
+                photo_url: `https://picsum.photos/seed/webuser/200/200`,
+            });
+        }
+        setIsLoading(false);
+    };
+
+    // The Telegram script might take a moment to load.
+    if (window.Telegram?.WebApp?.initData) {
+        initializeTelegram();
     } else {
-      // Also for development outside Telegram
-       setUser({
-          id: 123456789,
-          first_name: 'Dev',
-          last_name: 'User',
-          username: 'devuser',
-          photo_url: 'https://picsum.photos/seed/dev/200/200',
-        });
-      setIsLoading(false);
+        const timeout = setTimeout(initializeTelegram, 100); // Check again after a short delay
+        return () => clearTimeout(timeout);
     }
+    
   }, []);
 
   const value = { user, isTelegram, isLoading };

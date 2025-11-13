@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from './ui/card';
-import { Tag } from 'lucide-react';
+import { Tag, Upload } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
@@ -40,9 +40,10 @@ import { useUser } from '@/firebase';
 interface NftCardProps {
   nft: Nft;
   action?: 'buy' | 'manage';
+  onWithdrawClick?: () => void;
 }
 
-export function NftCard({ nft, action = 'buy' }: NftCardProps) {
+export function NftCard({ nft, action = 'buy', onWithdrawClick }: NftCardProps) {
   const { translations } = useLanguage();
   const { setNftForSale, removeNftFromSale, addNftToAuctions, buyNft } = useNft();
   const { user: currentUser } = useUser();
@@ -198,30 +199,35 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
         </Dialog>
       )}
       {!nft.isListed && (
-        <Dialog open={isAuctionStep1Open} onOpenChange={setIsAuctionStep1Open}>
-          <DialogTrigger asChild>
-              <Button variant="outline" className="w-full">{t('auction')}</Button>
-          </DialogTrigger>
-          <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Auksionga qo'yish</DialogTitle>
-                <DialogDescription>Auksion parametrlarini kiriting.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="duration" className="text-right">Davomiyligi (soat)</Label>
-                  <Input id="duration" type="number" value={auctionDuration} onChange={(e) => setAuctionDuration(e.target.value)} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="start-price" className="text-right">Boshlang'ich narx (UZS)</Label>
-                  <Input id="start-price" type="number" value={auctionStartPrice} onChange={(e) => setAuctionStartPrice(e.target.value)} className="col-span-3" />
-                </div>
-              </div>
-              <DialogFooter>
-                  <Button onClick={handleProceedToAuctionStep2}>Keyingisi</Button>
-              </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+            <Dialog open={isAuctionStep1Open} onOpenChange={setIsAuctionStep1Open}>
+              <DialogTrigger asChild>
+                  <Button variant="outline" className="flex-1">{t('auction')}</Button>
+              </DialogTrigger>
+              <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Auksionga qo'yish</DialogTitle>
+                    <DialogDescription>Auksion parametrlarini kiriting.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="duration" className="text-right">Davomiyligi (soat)</Label>
+                      <Input id="duration" type="number" value={auctionDuration} onChange={(e) => setAuctionDuration(e.target.value)} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="start-price" className="text-right">Boshlang'ich narx (UZS)</Label>
+                      <Input id="start-price" type="number" value={auctionStartPrice} onChange={(e) => setAuctionStartPrice(e.target.value)} className="col-span-3" />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                      <Button onClick={handleProceedToAuctionStep2}>Keyingisi</Button>
+                  </DialogFooter>
+              </DialogContent>
+            </Dialog>
+             <Button variant="outline" size="icon" onClick={onWithdrawClick}>
+                <Upload className="h-4 w-4" />
+             </Button>
+        </div>
       )}
        <AlertDialog open={isAuctionStep2Open} onOpenChange={setIsAuctionStep2Open}>
           <AlertDialogContent>
@@ -295,5 +301,3 @@ export function NftCard({ nft, action = 'buy' }: NftCardProps) {
     </Dialog>
   );
 }
-
-    

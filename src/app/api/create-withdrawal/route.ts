@@ -5,7 +5,8 @@ import * as admin from 'firebase-admin';
 import { spawn } from 'child_process';
 import path from 'path';
 
-// Bu funksiya yechib olish so'rovini qayta ishlaydi va avtomatik ravishda sovg'a yuborish skriptini ishga tushiradi.
+const WITHDRAWAL_FEE = 4000; // 4,000 UZS
+
 export async function POST(request: NextRequest) {
   try {
     const { userId, nftId, nftName, telegramUsername } = await request.json();
@@ -14,7 +15,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Barcha maydonlar to\'ldirilishi shart' }, { status: 400 });
     }
 
-    // 1. Python skriptini ishga tushirish
+    const userRef = adminDb.doc(`users/${userId}`);
+    const inventoryItemRef = adminDb.doc(`users/${userId}/inventory/${nftId}`);
+    const withdrawalRef = adminDb.collection('withdrawals').doc();
+
+    // 1. Transaction to check balance, deduct fee, and prepare for withdrawal
+    await adminDb.runTransaction(async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        const itemDoc = await transaction.get(inventoryItemRef);
+
+        if (!userDoc.exists) {
+            throw new Error("Foydalanuvchi hisobi topilmadi.");
+        }
+        if (!itemDoc.exists) {
+            throw new Error("Inventardagi NFT topilmadi.");
+        }
+
+        const userData = userDoc.data();
+        if (!userData || userData.balance < WITHDRAWAL_FEE) {
+            throw new Error(`Balansingizda yetarli mablag' yo'q. Yechib olish uchun ${WITHDRAWAL_FEE.toLocaleString()} UZS kerak.`);
+        }
+
+        // Deduct the fee
+        transaction.update(userRef, { balance: admin.firestore.FieldValue.increment(-WITHDRAWAL_FEE) });
+        
+        // Log the withdrawal request as pending. If python script fails, it stays pending.
+        const withdrawalData = {
+          userId: userId,
+          telegramUsername: telegramUsername,
+          nftId: nftId,
+          nftName: nftName,
+          status: 'pending', 
+          requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        transaction.set(withdrawalRef, withdrawalData);
+    });
+
+
+    // 2. Python skriptini ishga tushirish (only after fee is paid)
     const scriptPath = path.resolve(process.cwd(), 'scripts/auto_relayer.py');
     const pythonProcess = spawn('python3', [scriptPath, telegramUsername]);
 
@@ -33,65 +71,44 @@ export async function POST(request: NextRequest) {
       scriptError += chunk;
     });
     
-    // Handle spawn errors, e.g., command not found
     pythonProcess.on('error', (err) => {
         console.error('Failed to start subprocess.', err);
-        // Combine with other errors to provide full context
         scriptError = `Failed to start script: ${err.message}. Make sure python3 is installed and in the system's PATH. ${scriptError}`;
     });
 
     const scriptResult = await new Promise<{ success: boolean; message: string }>((resolve) => {
         pythonProcess.on('close', (code) => {
             console.log(`Python script exited with code ${code}`);
-            // Success is now strictly defined by the exit code and a success message in the output.
             if (code === 0 && scriptOutput.includes('✅ Gift muvaffaqiyatli yuborildi')) {
                 resolve({ success: true, message: scriptOutput });
             } else {
-                // Combine stderr and stdout for a comprehensive error message.
                 const fullError = (scriptError || 'Script produced an error.') + `\n--- Output ---\n` + (scriptOutput || 'No output.');
                 resolve({ success: false, message: fullError });
             }
         });
     });
 
-    // 2. Agar skript muvaffaqiyatsiz bo'lsa, jarayonni to'xtatish
+    // 3. Agar skript muvaffaqiyatsiz bo'lsa, jarayonni to'xtatish (fee is already paid)
     if (!scriptResult.success) {
-      // Skriptdagi keng tarqalgan xatolarni aniqlash va foydalanuvchiga tushunarli qilib ko'rsatish
       if (scriptResult.message.includes('telethon.errors.rpcerrorlist.UserNotMutualContactError')) {
            return NextResponse.json({ ok: false, error: 'Xatolik: Bot sizning kontaktingizda emas. Iltimos, botni kontaktingizga qo\'shing.' }, { status: 400 });
       }
        if (scriptResult.message.includes('JSON bo\'sh giftlarni qidiryapman')) {
            return NextResponse.json({ ok: false, error: 'Hozircha yuborish uchun sovg\'alar qolmadi. Iltimos, keyinroq urinib ko\'ring.' }, { status: 400 });
       }
-      // For other errors, return a generic message but log the detailed one.
       console.error(`Full Python script error for withdrawal: ${scriptResult.message}`);
-      return NextResponse.json({ ok: false, error: `Sovg'ani yuborishda noma'lum xatolik yuz berdi. Administrator bilan bog'laning.` }, { status: 500 });
+      // Return a generic error, but don't revert the fee. It's a cost of the attempt.
+      return NextResponse.json({ ok: false, error: `Sovg'ani yuborishda noma'lum xatolik yuz berdi. To'lov ushlab qolindi. Administrator bilan bog'laning.` }, { status: 500 });
     }
 
-
-    // 3. Skript muvaffaqiyatli bo'lsa, Firestore'dagi ma'lumotlarni yangilash
-    const withdrawalRef = adminDb.collection('withdrawals').doc();
-    const inventoryItemRef = adminDb.doc(`users/${userId}/inventory/${nftId}`);
-
-    const withdrawalData = {
-      userId: userId,
-      telegramUsername: telegramUsername,
-      nftId: nftId,
-      nftName: nftName,
-      status: 'completed', // Statusni 'completed' ga o'zgartiramiz
-      requestedAt: admin.firestore.FieldValue.serverTimestamp(),
-      completedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-    
+    // 4. Skript muvaffaqiyatli bo'lsa, Firestore'dagi ma'lumotlarni yakuniy yangilash
     await adminDb.runTransaction(async (transaction) => {
-        const itemDoc = await transaction.get(inventoryItemRef);
-        if (!itemDoc.exists) {
-            // Bu holat kamdan-kam bo'lishi kerak, chunki frontendda tekshiriladi
-            throw new Error("Inventardagi NFT topilmadi.");
-        }
-        // Yechib olish yozuvini yaratish
-        transaction.set(withdrawalRef, withdrawalData);
-        // Inventardan NFTni o'chirish
+        // Update withdrawal to completed
+        transaction.update(withdrawalRef, {
+            status: 'completed',
+            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        // Remove NFT from inventory
         transaction.delete(inventoryItemRef);
     });
 

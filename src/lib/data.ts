@@ -1,11 +1,18 @@
+
 import { PlaceHolderImages } from './placeholder-images';
 
 export interface UserAccount {
-  id: string;
+  id: string; // Firebase UID
   telegramId: string;
   username: string;
   fullName: string;
   balance: number;
+  referredBy?: string; // UID of the user who referred them
+  referrals?: number; // Number of users they have referred
+  referralEarnings?: number; // Total earnings from referrals
+  tradeVolume?: number; // Total UZS value of trades
+  nftsBought?: number;
+  nftsSold?: number;
 }
 
 export interface Nft {
@@ -38,7 +45,7 @@ export interface WithdrawalRequest {
     nftName: string;
     status: 'completed' | 'pending';
     requestedAt: any; // Firestore Timestamp
-    completedAt: any; // Firestore Timestamp
+    completedAt?: any; // Firestore Timestamp
 }
 
 

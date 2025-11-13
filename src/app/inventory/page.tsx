@@ -13,10 +13,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { NftCard } from '@/components/nft-card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Nft } from '@/lib/data';
 import { PlusCircle, Upload, Send, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
@@ -37,7 +36,7 @@ import { Label } from '@/components/ui/label';
 
 export default function InventoryPage() {
   const { inventoryNfts, isLoading } = useNft();
-  const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
+  const [selectedNft, setSelectedNft] = useState<Nft | null>(null);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
@@ -57,11 +56,11 @@ export default function InventoryPage() {
     return translation;
   };
   
-  useState(() => {
+  useEffect(() => {
     if(telegramUser?.username) {
         setTelegramUsername(`@${telegramUser.username}`);
     }
-  });
+  }, [telegramUser]);
 
   const handleDeposit = async () => {
     if (!firebaseUser || !telegramUser) return;
@@ -100,8 +99,13 @@ export default function InventoryPage() {
     }
   }
 
+  const handleSelectNftForWithdraw = (nft: Nft) => {
+    setSelectedNft(nft);
+    setIsWithdrawDialogOpen(true);
+  }
+
   const handleWithdraw = async () => {
-    if (selectedNfts.size === 0 || !firebaseUser) return;
+    if (!selectedNft || !firebaseUser) return;
     if (!telegramUsername || !telegramUsername.startsWith('@')) {
         toast({
             variant: 'destructive',
@@ -112,14 +116,6 @@ export default function InventoryPage() {
     }
 
     setIsProcessing(true);
-    
-    const nftId = Array.from(selectedNfts)[0];
-    const nft = inventoryNfts.find(n => n.id === nftId);
-
-    if (!nft) {
-        setIsProcessing(false);
-        return;
-    }
 
     try {
         const response = await fetch('/api/create-withdrawal', {
@@ -127,8 +123,8 @@ export default function InventoryPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userId: firebaseUser.uid,
-                nftId: nft.id,
-                nftName: nft.name,
+                nftId: selectedNft.id,
+                nftName: selectedNft.name,
                 telegramUsername: telegramUsername,
             })
         });
@@ -144,7 +140,7 @@ export default function InventoryPage() {
             description: result.message,
         });
         
-        setSelectedNfts(new Set());
+        setSelectedNft(null);
         setIsWithdrawDialogOpen(false);
 
     } catch (error: any) {
@@ -157,36 +153,6 @@ export default function InventoryPage() {
     } finally {
         setIsProcessing(false);
     }
-  };
-
-  const renderNftGrid = (nftList: Nft[], inWithdrawMode: boolean) => {
-    if (nftList.length === 0) {
-      return (
-        <div className="col-span-full text-center py-16">
-          <p className="text-muted-foreground">
-            {inWithdrawMode ? t('noNftsToWithdraw') : t('noNftsInSection')}
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {nftList.map((nft) => (
-          <div
-            key={nft.id}
-            onClick={() => inWithdrawMode && toggleNftSelection(nft.id)}
-            className={`cursor-pointer rounded-lg transition-all ${
-              selectedNfts.has(nft.id)
-                ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
-                : ''
-            }`}
-          >
-            <NftCard nft={nft} action="manage" />
-          </div>
-        ))}
-      </div>
-    );
   };
 
 
@@ -206,56 +172,8 @@ export default function InventoryPage() {
               {t('addOrMint')}
           </Button>
 
-          <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Upload className="mr-2 h-4 w-4" />
-                {t('withdrawNft')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>{t('withdrawNfts')}</DialogTitle>
-                <DialogDescription>
-                  {t('selectNftsToWithdraw')} (Hozircha bir vaqtda faqat bitta NFT yechish mumkin)
-                </DialogDescription>
-              </DialogHeader>
-              <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
-                {renderNftGrid(inventoryNfts, true)}
-              </div>
-               <div className="space-y-2 mt-4">
-                  <Label htmlFor="telegram-username">Telegram Username</Label>
-                  <Input 
-                    id="telegram-username" 
-                    placeholder="@username" 
-                    value={telegramUsername}
-                    onChange={(e) => setTelegramUsername(e.target.value)}
-                    />
-                  <p className="text-xs text-muted-foreground">Sovg'a yuborilishi uchun Telegram manzilingizni kiriting.</p>
-                </div>
-              <DialogFooter className="mt-4">
-                <DialogClose asChild>
-                   <Button
-                    variant="outline"
-                    onClick={() => setSelectedNfts(new Set())}
-                    >
-                    {t('cancel')}
-                  </Button>
-                </DialogClose>
-                <Button
-                  disabled={selectedNfts.size !== 1 || !telegramUsername || isProcessing}
-                  onClick={handleWithdraw}
-                >
-                  {isProcessing ? (
-                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="mr-2 h-4 w-4" />
-                  )}
-                   {isProcessing ? 'Yuborilmoqda...' : t('withdrawNSelected', { count: selectedNfts.size })}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <p className="text-xs text-muted-foreground text-center sm:hidden mt-2">NFT qo'shish uchun avval uni @nftkerak_saqlovchi ga yuboring.</p>
+
         </div>
       </div>
 
@@ -266,7 +184,7 @@ export default function InventoryPage() {
        ) : inventoryNfts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               {inventoryNfts.map((nft) => (
-                <NftCard key={nft.id} nft={nft} action="manage" />
+                <NftCard key={nft.id} nft={nft} action="manage" onWithdrawClick={() => handleSelectNftForWithdraw(nft)} />
               ))}
             </div>
           ) : (
@@ -275,8 +193,50 @@ export default function InventoryPage() {
             </div>
        )}
 
+      <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>NFT Yechib Olish</DialogTitle>
+            <DialogDescription>
+              "{selectedNft?.name}" nomli NFTni telegram hisobingizga qaytarib olmoqchisiz.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="telegram-username">Telegram Username</Label>
+              <Input 
+                id="telegram-username" 
+                placeholder="@username" 
+                value={telegramUsername}
+                onChange={(e) => setTelegramUsername(e.target.value)}
+                />
+              <p className="text-xs text-muted-foreground">Sovg'a yuborilishi kerak bo'lgan Telegram manzil.</p>
+            </div>
+            <div className="rounded-lg border bg-background/50 p-3 text-center">
+              <p className="text-sm text-muted-foreground">Xizmat uchun komissiya</p>
+              <p className="text-lg font-bold text-primary">4,000 UZS</p>
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <DialogClose asChild>
+              <Button variant="outline" onClick={() => setSelectedNft(null)}>
+                {t('cancel')}
+              </Button>
+            </DialogClose>
+            <Button
+              disabled={!telegramUsername || isProcessing}
+              onClick={handleWithdraw}
+            >
+              {isProcessing ? (
+                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 h-4 w-4" />
+              )}
+               {isProcessing ? 'Yuborilmoqda...' : `Tasdiqlash va Yechib olish`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-    
