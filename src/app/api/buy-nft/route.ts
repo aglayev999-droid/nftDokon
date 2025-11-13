@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Error in /api/buy-nft:', error);
+    // Ensure a structured error is always returned
     return NextResponse.json({ ok: false, error: error.message || 'An internal server error occurred.' }, { status: 500 });
   }
 }
