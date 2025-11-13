@@ -6,9 +6,10 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # --- SOZLAMALAR ---
 # Bu yerga @BotFather orqali olingan o'z bot tokeningizni qo'ying
-BOT_TOKEN = "8108408790:AAHEhCXQXaaZEbQeZfGblqvWKwhNLOfxDco" 
+# Yoki serverda muhit o'zgaruvchisi (environment variable) sifatida saqlang
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8108408790:AAHEhCXQXaaZEbQeZfGblqvWKwhNLOfxDco") 
 # Xabarlar yuborilishi kerak bo'lgan akkauntning Telegram ID raqami
-ADMIN_CHAT_ID = "7275593552"
+ADMIN_CHAT_ID = os.environ.get("TELEGRAM_ADMIN_CHAT_ID", "7275593552")
 # Veb-saytingizning to'liq manzili, "https://" bilan boshlanishi shart
 WEB_APP_URL = "https://nftdokon.onrender.com" 
 
@@ -36,34 +37,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     await update.message.reply_text(welcome_message, reply_markup=reply_markup)
 
-async def send_withdrawal_notification(context: ContextTypes.DEFAULT_TYPE, user_id: str, nft_name: str, target_username: str) -> None:
-    """Adminisztratorga yangi yechib olish so'rovi haqida xabar yuboradi."""
-    
-    message_text = (
-        "📢 Yangi yechib olish so'rovi!\n\n"
-        f"👤 Foydalanuvchi ID: `{user_id}`\n"
-        f"🎁 NFT Nomi: *{nft_name}*\n"
-        f"🎯 Telegram Manzili: `{target_username}`\n\n"
-        "Iltimos, `auto_relayer.py` skripti yordamida sovg'ani ushbu manzilga yuboring."
-    )
-    
-    try:
-        await context.bot.send_message(
-            chat_id=ADMIN_CHAT_ID,
-            text=message_text,
-            parse_mode='Markdown'
-        )
-        print(f"Admin ({ADMIN_CHAT_ID})ga xabar muvaffaqiyatli yuborildi.")
-    except Exception as e:
-        print(f"Adminga xabar yuborishda xatolik yuz berdi: {e}")
 
 # --- BOTNI ISHGA TUSHIRISH ---
 
 def main() -> None:
     """Botni ishga tushiradi va /start buyrug'ini kutadi."""
     
-    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or not ADMIN_CHAT_ID:
-        print("XATOLIK: Iltimos, `bot.py` faylidagi BOT_TOKEN va ADMIN_CHAT_ID o'zgaruvchilarini to'ldiring.")
+    if not BOT_TOKEN or not ADMIN_CHAT_ID:
+        print("XATOLIK: Iltimos, BOT_TOKEN va ADMIN_CHAT_ID o'zgaruvchilarini sozlang (bot.py yoki environment variables).")
         return
 
     application = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -79,23 +60,6 @@ def main() -> None:
 if __name__ == '__main__':
     main()
     
-# --- QANDAY ISHLATILADI? ---
-# 1. Serverda (masalan, Firebase Functions, Heroku, AWS Lambda) yechib olish so'rovi yaratilganda,
-#    Firestore'dagi o'zgarishni kuzatadigan trigger yarating.
-# 2. Ushbu trigger ishga tushganda, `send_withdrawal_notification` funksiyasini chaqiring.
-#    Bu funksiya asinxron bo'lgani uchun, uni to'g'ri ishlatish kerak.
-# 
-# Misol uchun (bu kodni alohida server logikasida ishlatish kerak):
-# async def handle_new_withdrawal(data):
-#     bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
-#     await send_withdrawal_notification(
-#         context=ContextTypes.DEFAULT_TYPE(bot_app, chat_id=ADMIN_CHAT_ID),
-#         user_id=data['userId'],
-#         nft_name=data['nftName'],
-#         target_username=data['telegramUsername']
-#     )
-# 
-# Bu faylning o'zini `python bot.py` buyrug'i bilan ishga tushirsangiz,
-# u faqat Telegramdan keladigan /start buyrug'iga javob beradi.
-# Xabarnoma yuborish logikasi asosiy saytning backend qismidan chaqirilishi kerak.
-
+# Xabarnoma yuborish logikasi endi saytning backend qismidan (`/api/create-withdrawal`) chaqiriladi.
+# Ushbu faylning vazifasi faqat foydalanuvchilar uchun /start buyrug'ini taqdim etishdan iborat.
+# Buni alohida ishga tushirib qo'yish kerak (masalan, serverda doimiy ishlaydigan xizmat sifatida).

@@ -29,22 +29,21 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useNft } from '@/context/nft-context';
-import { useUser, useFirestore, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useTelegramUser } from '@/context/telegram-user-context';
-import { collection, addDoc, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function InventoryPage() {
-  const { nfts, removeNftFromInventory } = useNft();
+  const { nfts } = useNft();
   const [selectedNfts, setSelectedNfts] = useState<Set<string>>(new Set());
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [telegramUsername, setTelegramUsername] = useState('');
   const { translations } = useLanguage();
   const { user: firebaseUser } = useUser();
   const { user: telegramUser } = useTelegramUser();
-  const firestore = useFirestore();
   const { toast } = useToast();
 
   const t = (key: string, params?: { [key: string]: any }) => {
@@ -80,9 +79,7 @@ export default function InventoryPage() {
   };
 
   const handleWithdraw = async () => {
-    if (selectedNfts.size === 0 || !firebaseUser || !firestore) {
-      return;
-    }
+    if (selectedNfts.size === 0 || !firebaseUser) return;
     if (!telegramUsername || !telegramUsername.startsWith('@')) {
         toast({
             variant: 'destructive',
@@ -92,68 +89,62 @@ export default function InventoryPage() {
         return;
     }
 
-    const withdrawalsRef = collection(firestore, 'withdrawals');
-    const selectedNftIds = Array.from(selectedNfts);
+    setIsProcessing(true);
     
-    const batch = writeBatch(firestore);
+    // Process one NFT at a time for simplicity and clearer feedback
+    const nftId = Array.from(selectedNfts)[0];
+    const nft = nfts.find(n => n.id === nftId);
 
-    // Prepare a sample of the data for potential error reporting
-    let sampleWithdrawalData: any = {};
-
-    for (const nftId of selectedNftIds) {
-      const nft = nfts.find(n => n.id === nftId);
-      if (nft) {
-        const withdrawalData = {
-          userId: firebaseUser.uid,
-          telegramUsername: telegramUsername,
-          nftId: nft.id,
-          nftName: nft.name,
-          status: 'pending',
-          requestedAt: serverTimestamp(),
-        };
-
-        if(Object.keys(sampleWithdrawalData).length === 0) {
-            sampleWithdrawalData = withdrawalData;
-        }
-
-        const newWithdrawalRef = doc(withdrawalsRef); // Create a ref with a new ID
-        batch.set(newWithdrawalRef, withdrawalData);
-
-        // Also add deletion from inventory to the same batch
-        const inventoryItemRef = doc(firestore, 'users', firebaseUser.uid, 'inventory', nftId);
-        batch.delete(inventoryItemRef);
-      }
+    if (!nft) {
+        setIsProcessing(false);
+        return;
     }
-    
+
     try {
-        await batch.commit();
+        const response = await fetch('/api/create-withdrawal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: firebaseUser.uid,
+                nftId: nft.id,
+                nftName: nft.name,
+                telegramUsername: telegramUsername,
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Serverda noma'lum xatolik yuz berdi.");
+        }
+        
         toast({
             title: "So'rov yuborildi",
-            description: `${selectedNfts.size} ta NFTni yechib olish so'rovi muvaffaqiyatli yuborildi va inventardan olib tashlandi.`,
+            description: `"${nft.name}" uchun yechib olish so'rovi adminga yuborildi.`,
+        });
+        
+        // Remove the processed NFT from selection
+        setSelectedNfts(prev => {
+            const newSelection = new Set(prev);
+            newSelection.delete(nftId);
+            return newSelection;
         });
 
     } catch (error: any) {
-        if (error.code === 'permission-denied') {
-            // A batch write can fail on any of its operations.
-            // We'll report the error on the 'withdrawals' collection as that's the most likely culprit.
-            const contextualError = new FirestorePermissionError({
-                path: 'withdrawals', // Path of the collection for creating requests
-                operation: 'create', // The operation within the batch that likely failed
-                requestResourceData: sampleWithdrawalData, // Show sample data for context
-            });
-            errorEmitter.emit('permission-error', contextualError);
-        } else {
-            console.error("Error creating withdrawal request:", error);
-            toast({
-                variant: "destructive",
-                title: "Xatolik",
-                description: "So'rovni yuborishda xatolik yuz berdi. Iltimos, keyinroq yana urinib ko'ring.",
-            });
-        }
+        console.error("Yechib olishda xato:", error);
+        toast({
+            variant: "destructive",
+            title: "Xatolik",
+            description: error.message || "So'rovni yuborishda xatolik yuz berdi. Iltimos, keyinroq yana urinib ko'ring.",
+        });
+    } finally {
+        // If there are more NFTs to process, we could continue here,
+        // but for now, we'll just stop after the first one.
+        setIsProcessing(false);
+        // We close the dialog after one attempt.
+        setIsWithdrawDialogOpen(false);
+        setSelectedNfts(new Set());
     }
-    
-    setSelectedNfts(new Set());
-    setIsWithdrawDialogOpen(false);
   };
 
   const renderNftGrid = (nftList: Nft[], inWithdrawMode: boolean) => {
@@ -226,7 +217,7 @@ export default function InventoryPage() {
               <DialogHeader>
                 <DialogTitle>{t('withdrawNfts')}</DialogTitle>
                 <DialogDescription>
-                  {t('selectNftsToWithdraw')}
+                  {t('selectNftsToWithdraw')} (Hozircha bir vaqtda faqat bitta NFT yechish mumkin)
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-[60vh] overflow-y-auto p-1 pr-4">
@@ -252,11 +243,15 @@ export default function InventoryPage() {
                   </Button>
                 </DialogClose>
                 <Button
-                  disabled={selectedNfts.size === 0 || !telegramUsername}
+                  disabled={selectedNfts.size !== 1 || !telegramUsername || isProcessing}
                   onClick={handleWithdraw}
                 >
-                  <Send className="mr-2 h-4 w-4" />
-                  {t('withdrawNSelected', { count: selectedNfts.size })}
+                  {isProcessing ? 'Yuborilmoqda...' : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      {t('withdrawNSelected', { count: selectedNfts.size })}
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -320,5 +315,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-
-    

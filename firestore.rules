@@ -31,10 +31,11 @@ service cloud.firestore {
         // A user can read their own inventory
         allow get, list: if isOwner(userId);
         
-        // A user can create and update their own inventory items.
-        // Deleting from inventory is now part of the 'withdraw' process,
-        // which creates a request document. The client can delete its own item.
-        allow create, update, delete: if isOwner(userId);
+        // Creating and updating items is handled by the client.
+        // Deleting from inventory is now handled by the backend /api/create-withdrawal
+        // so we disallow client-side deletes.
+        allow create, update: if isOwner(userId);
+        allow delete: if false; // IMPORTANT: Deletion is now a backend responsibility
       }
     }
     
@@ -64,13 +65,10 @@ service cloud.firestore {
     }
 
     // /withdrawals/{withdrawalId}
+    // Withdrawal requests are now created by the backend API route.
+    // Clients are not allowed to create, read, or modify them directly.
     match /withdrawals/{withdrawalId} {
-      // Users can create their own withdrawal requests.
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-
-      // Only the site admin (or a backend function) should read or modify requests.
-      // We'll leave this as false for client-side access.
-      allow read, list, update, delete: if false;
+      allow read, write: if false;
     }
   }
 }
