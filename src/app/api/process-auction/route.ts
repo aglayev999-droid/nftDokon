@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
             
             // Create a clean NFT object to return, removing all auction-specific fields.
             const returnedNftData: Nft = {
-                id: auctionData.id,
+                id: auctionId, // FIXED: Ensure the ID is correctly set
                 name: auctionData.name,
                 price: 0,
                 rarity: auctionData.rarity,
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         
         // 3. Prepare new NFT data for the winner, cleaning auction fields.
         const newNftData: Nft = {
-            id: auctionData.id,
+            id: auctionId, // Ensure ID is set for the winner as well
             name: auctionData.name,
             price: 0,
             rarity: auctionData.rarity,
@@ -130,4 +130,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: error.message || 'An internal server error occurred.' }, { status: 500 });
   }
 }
-
