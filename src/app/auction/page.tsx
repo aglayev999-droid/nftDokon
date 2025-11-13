@@ -13,7 +13,9 @@ import { AuctionCard } from '@/components/auction-card';
 import { Nft } from '@/lib/data';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+
+type SortOption = 'ending-soon' | 'newest' | 'price-high-low' | 'price-low-high';
 
 // A simple in-memory cache to track which auctions have been processed
 const processedAuctions = new Set<string>();
@@ -45,6 +47,7 @@ async function processEndedAuction(auctionId: string) {
 export default function AuctionPage() {
   const { translations } = useLanguage();
   const t = (key: string) => translations[key] || key;
+  const [sortOption, setSortOption] = useState<SortOption>('ending-soon');
 
   const firestore = useFirestore();
   
@@ -66,9 +69,26 @@ export default function AuctionPage() {
         }
       });
     }
-  }, [auctionNfts]); // Rerun whenever the auction list changes
+  }, [auctionNfts]);
 
-  const activeAuctions = auctionNfts?.filter(nft => nft.endTime && Date.now() < nft.endTime) || [];
+  const sortedActiveAuctions = useMemo(() => {
+    const activeAuctions = auctionNfts?.filter(nft => nft.endTime && Date.now() < nft.endTime) || [];
+    
+    return [...activeAuctions].sort((a, b) => {
+        switch(sortOption) {
+            case 'ending-soon':
+                return (a.endTime || 0) - (b.endTime || 0);
+            case 'newest':
+                return (b.startTime || 0) - (a.startTime || 0);
+            case 'price-high-low':
+                return (b.highestBid || 0) - (a.highestBid || 0);
+            case 'price-low-high':
+                return (a.highestBid || 0) - (b.highestBid || 0);
+            default:
+                return 0;
+        }
+    });
+  }, [auctionNfts, sortOption]);
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -77,7 +97,7 @@ export default function AuctionPage() {
           {t('auction')}
         </h1>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Select defaultValue="ending-soon">
+          <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
             <SelectTrigger className="w-full sm:w-[180px] flex-1">
               <SelectValue placeholder={t('sortBy')} />
             </SelectTrigger>
@@ -101,9 +121,9 @@ export default function AuctionPage() {
         </div>
       )}
 
-      {!isLoading && activeAuctions.length > 0 ? (
+      {!isLoading && sortedActiveAuctions.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {activeAuctions.map((nft) => (
+          {sortedActiveAuctions.map((nft) => (
             <AuctionCard key={nft.id} nft={nft} />
           ))}
         </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -76,6 +75,12 @@ export default function MarketplacePage() {
       price: { ...prev.price, [field]: value }
     }));
   };
+  
+  const applyPriceFilter = () => {
+    // This function is just to trigger re-render for price, 
+    // the logic is already in useMemo.
+    setFilters(prev => ({...prev}));
+  }
 
   const filteredAndSortedNfts = useMemo(() => {
     let filtered = marketplaceNfts;
@@ -163,7 +168,7 @@ export default function MarketplacePage() {
             <AccordionContent className="space-y-2">
               {allCollections.map(col => (
                 <div key={col} className="flex items-center space-x-2">
-                  <Checkbox id={`col-${col}`} onCheckedChange={() => handleFilterChange('collections', col)} />
+                  <Checkbox id={`col-${col}`} onCheckedChange={() => handleFilterChange('collections', col)} checked={filters.collections.has(col)} />
                   <Label htmlFor={`col-${col}`}>{col}</Label>
                 </div>
               ))}
@@ -176,6 +181,7 @@ export default function MarketplacePage() {
                 <Input type="number" placeholder={t('min')} value={filters.price.min} onChange={e => handlePriceFilterChange('min', e.target.value)} />
                 <Input type="number" placeholder={t('max')} value={filters.price.max} onChange={e => handlePriceFilterChange('max', e.target.value)} />
               </div>
+              <Button onClick={applyPriceFilter} className="w-full">{t('apply')}</Button>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="model">
@@ -185,7 +191,7 @@ export default function MarketplacePage() {
             <AccordionContent className="space-y-2">
               {allModels.map(model => (
                  <div key={model} className="flex items-center space-x-2">
-                  <Checkbox id={`model-${model}`} onCheckedChange={() => handleFilterChange('models', model)} />
+                  <Checkbox id={`model-${model}`} onCheckedChange={() => handleFilterChange('models', model)} checked={filters.models.has(model)} />
                   <Label htmlFor={`model-${model}`}>{t(model.toLowerCase()) || model}</Label>
                 </div>
               ))}
@@ -198,7 +204,7 @@ export default function MarketplacePage() {
             <AccordionContent className="space-y-2">
                {allBackgrounds.map(bg => (
                 <div key={bg} className="flex items-center space-x-2">
-                  <Checkbox id={`bg-${bg}`} onCheckedChange={() => handleFilterChange('backgrounds', bg)} />
+                  <Checkbox id={`bg-${bg}`} onCheckedChange={() => handleFilterChange('backgrounds', bg)} checked={filters.backgrounds.has(bg)} />
                   <Label htmlFor={`bg-${bg}`}>{t(bg.toLowerCase()) || bg}</Label>
                 </div>
                ))}
