@@ -13,6 +13,7 @@ import { WalletProvider } from '@/context/wallet-context';
 import { NftProvider } from '@/context/nft-context';
 import { FirebaseClientProvider } from '@/firebase';
 import { TelegramUserProvider } from '@/context/telegram-user-context';
+import { AdminProvider } from '@/context/admin-context';
 
 export default function RootLayout({
   children,
@@ -33,37 +34,39 @@ export default function RootLayout({
     <LanguageProvider>
       <TelegramUserProvider>
         <FirebaseClientProvider>
-          <WalletProvider>
-            <NftProvider>
-              <html lang="uz">
-                <head>
-                  <link rel="preconnect" href="https://fonts.googleapis.com" />
-                  <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                  <link
-                    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-                    rel="stylesheet"
-                  />
-                  <link
-                    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-                    rel="stylesheet"
-                  />
-                </head>
-                <body className="font-body antialiased min-h-screen flex flex-col">
-                  {loading ? (
-                    <LoadingScreen />
-                  ) : (
-                    <>
-                      <Header />
-                      <main className="flex-grow pb-16 md:pb-0">{children}</main>
-                      <Footer />
-                      <Toaster />
-                      <BottomNav />
-                    </>
-                  )}
-                </body>
-              </html>
-            </NftProvider>
-          </WalletProvider>
+          <AdminProvider>
+            <WalletProvider>
+              <NftProvider>
+                <html lang="uz">
+                  <head>
+                    <link rel="preconnect" href="https://fonts.googleapis.com" />
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                    <link
+                      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+                      rel="stylesheet"
+                    />
+                    <link
+                      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+                      rel="stylesheet"
+                    />
+                  </head>
+                  <body className="font-body antialiased min-h-screen flex flex-col">
+                    {loading ? (
+                      <LoadingScreen />
+                    ) : (
+                      <>
+                        <Header />
+                        <main className="flex-grow pb-16 md:pb-0">{children}</main>
+                        <Footer />
+                        <Toaster />
+                        <BottomNav />
+                      </>
+                    )}
+                  </body>
+                </html>
+              </NftProvider>
+            </WalletProvider>
+          </AdminProvider>
         </FirebaseClientProvider>
       </TelegramUserProvider>
     </LanguageProvider>

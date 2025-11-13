@@ -4,6 +4,7 @@ export interface UserAccount {
   id: string;
   telegramId: string;
   username: string;
+  fullName: string;
   balance: number;
 }
 

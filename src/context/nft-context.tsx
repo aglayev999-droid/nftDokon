@@ -71,7 +71,8 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
             const newUserAccount: UserAccount = {
                 id: userId,
                 telegramId: String(telegramUser.id),
-                username: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+                username: telegramUser.username || telegramUser.first_name,
+                fullName: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
                 balance: 1000000, // Generous starting balance
             };
             transaction.set(userDocRef, newUserAccount);

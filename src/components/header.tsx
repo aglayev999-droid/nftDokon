@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Gift, Menu, Plus, Settings } from 'lucide-react';
+import { Gift, Menu, Plus, Settings, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -33,12 +33,14 @@ import { useLanguage } from '@/context/language-context';
 import { WalletDialog } from './wallet-dialog';
 import { useWallet } from '@/context/wallet-context';
 import { useTelegramUser } from '@/context/telegram-user-context';
+import { useAdmin } from '@/context/admin-context';
 
 export default function Header() {
   const pathname = usePathname();
   const { isTelegram } = useTelegramUser();
   const { language, setLanguage, translations } = useLanguage();
   const { balance } = useWallet();
+  const { isAdmin } = useAdmin();
   const [theme, setTheme] = useState('dark');
 
   const t = (key: string) => {
@@ -55,6 +57,10 @@ export default function Header() {
     { name: t('auction'), href: '/auction' },
     { name: t('profile'), href: '/profile' },
   ];
+
+  if (isAdmin) {
+    navigation.push({ name: 'Admin', href: '/admin'});
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -87,10 +93,11 @@ export default function Header() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'transition-colors hover:text-foreground/80',
+                  'transition-colors hover:text-foreground/80 flex items-center gap-1',
                   pathname === item.href ? 'text-foreground' : 'text-foreground/60'
                 )}
               >
+                {item.name === 'Admin' && <Shield className="h-4 w-4" />}
                 {item.name}
               </Link>
             ))}
@@ -122,10 +129,11 @@ export default function Header() {
                     key={item.name}
                     href={item.href}
                     className={cn(
-                        'text-lg font-medium transition-colors hover:text-foreground/80',
+                        'text-lg font-medium transition-colors hover:text-foreground/80 flex items-center gap-2',
                         pathname === item.href ? 'text-foreground' : 'text-foreground/60'
                     )}
                     >
+                    {item.name === 'Admin' && <Shield className="h-5 w-5" />}
                     {item.name}
                     </Link>
                 ))}
