@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useEffect } from 'react';
 import { useTelegramUser } from './telegram-user-context';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 // Add the Telegram username of admins here
@@ -40,21 +40,27 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   
   // Effect to provision the user as an admin in Firestore if they are one
   useEffect(() => {
-    if (isAdmin && firebaseUser && firestore) {
+    if (isAdmin && firebaseUser && firestore && telegramUser) {
       const adminDocRef = doc(firestore, 'admins', firebaseUser.uid);
+      const adminData = {
+        telegramId: telegramUser.id,
+        username: telegramUser.username,
+        provisionedAt: new Date(),
+      };
       
-      // Check if the document already exists before writing
       getDoc(adminDocRef).then(docSnap => {
         if (!docSnap.exists()) {
-          // Document doesn't exist, so create it.
-          setDoc(adminDocRef, {
-            telegramId: telegramUser?.id,
-            username: telegramUser?.username,
-            provisionedAt: new Date(),
-          }).catch(error => {
-            // This might fail if rules aren't set up for admins to create,
-            // but the read check should still pass on subsequent loads if it exists.
-            console.error("Failed to provision admin document:", error);
+          setDoc(adminDocRef, adminData).catch(error => {
+            if (error.code === 'permission-denied') {
+                 const contextualError = new FirestorePermissionError({
+                    path: adminDocRef.path,
+                    operation: 'create', 
+                    requestResourceData: adminData
+                });
+                errorEmitter.emit('permission-error', contextualError);
+            } else {
+                console.error("Failed to provision admin document:", error);
+            }
           });
         }
       });
