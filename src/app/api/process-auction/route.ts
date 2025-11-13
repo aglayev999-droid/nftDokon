@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
             const ownerInventoryRef = adminDb.collection('users').doc(ownerId).collection('inventory').doc(auctionId);
             
             // Create a clean NFT object to return, removing all auction-specific fields.
-            const returnedNftData: Omit<Nft, 'id'> = {
+            const returnedNftData: Nft = {
+                id: auctionData.id,
                 name: auctionData.name,
                 price: 0,
                 rarity: auctionData.rarity,
@@ -59,8 +60,8 @@ export async function POST(request: NextRequest) {
                 ownerId: ownerId,
             };
 
-            // Set the clean NFT object back into the owner's inventory. Add the ID separately for the document.
-            transaction.set(ownerInventoryRef, { id: auctionData.id, ...returnedNftData });
+            // Set the clean NFT object back into the owner's inventory.
+            transaction.set(ownerInventoryRef, returnedNftData);
             // Delete the auction record.
             transaction.delete(auctionRef);
             
@@ -95,7 +96,8 @@ export async function POST(request: NextRequest) {
         transaction.update(ownerRef, { balance: admin.firestore.FieldValue.increment(finalPrice) });
         
         // 3. Prepare new NFT data for the winner, cleaning auction fields.
-        const newNftData: Omit<Nft, 'id'> = {
+        const newNftData: Nft = {
+            id: auctionData.id,
             name: auctionData.name,
             price: 0,
             rarity: auctionData.rarity,
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
         
         // 4. Create the NFT in the winner's inventory
         const winnerInventoryRef = winnerRef.collection('inventory').doc(auctionId);
-        transaction.set(winnerInventoryRef, { id: auctionData.id, ...newNftData });
+        transaction.set(winnerInventoryRef, newNftData);
 
         // 5. Delete the NFT from the auctions collection
         transaction.delete(auctionRef);
@@ -128,3 +130,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: error.message || 'An internal server error occurred.' }, { status: 500 });
   }
 }
+
