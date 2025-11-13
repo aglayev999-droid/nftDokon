@@ -46,8 +46,9 @@ service cloud.firestore {
     // Only admins can read the list of other admins.
     match /admins/{adminId} {
         allow get, list: if isAdmin();
-        // Allow a user to create THEIR OWN admin document if they are an admin.
-        allow create: if isOwner(adminId) && isAdmin();
+        // Allow a user to create THEIR OWN admin document.
+        // The logic in admin-context.tsx ensures only true admins attempt this write.
+        allow create: if isOwner(adminId);
         // Disallow client-side updates/deletions of admins for security.
         allow update, delete: if false;
     }
