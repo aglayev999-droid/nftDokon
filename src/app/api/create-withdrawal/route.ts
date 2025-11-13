@@ -2,10 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import * as admin from 'firebase-admin';
-import { ApplicationBuilder, ContextTypes } from 'telegram';
-import { sendTelegramNotification } from '@/lib/telegram';
+import { spawn } from 'child_process';
+import path from 'path';
 
-// Bu funksiya yechib olish so'rovini yaratadi va adminga Telegram orqali xabar yuboradi.
+// Bu funksiya yechib olish so'rovini qayta ishlaydi va avtomatik ravishda sovg'a yuborish skriptini ishga tushiradi.
 export async function POST(request: NextRequest) {
   try {
     const { userId, nftId, nftName, telegramUsername } = await request.json();
@@ -14,6 +14,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Barcha maydonlar to\'ldirilishi shart' }, { status: 400 });
     }
 
+    // 1. Python skriptini ishga tushirish
+    const scriptPath = path.resolve(process.cwd(), 'scripts/auto_relayer.py');
+    const pythonProcess = spawn('python3', [scriptPath, telegramUsername]);
+
+    let scriptOutput = '';
+    let scriptError = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      scriptOutput += data.toString();
+      console.log(`Python stdout: ${data}`);
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      scriptError += data.toString();
+      console.error(`Python stderr: ${data}`);
+    });
+
+    const scriptResult = await new Promise<{ success: boolean; message: string }>((resolve) => {
+        pythonProcess.on('close', (code) => {
+            console.log(`Python script exited with code ${code}`);
+            if (code === 0 && scriptOutput.includes('✅ Gift muvaffaqiyatli yuborildi')) {
+                resolve({ success: true, message: 'Sovg\'a muvaffaqiyatli yuborildi.' });
+            } else {
+                resolve({ success: false, message: scriptError || scriptOutput || 'Skriptni ishga tushirishda noma\'lum xatolik.' });
+            }
+        });
+    });
+
+    // 2. Agar skript muvaffaqiyatsiz bo'lsa, jarayonni to'xtatish
+    if (!scriptResult.success) {
+      // Skriptdagi keng tarqalgan xatolarni aniqlash
+      if (scriptResult.message.includes('telethon.errors.rpcerrorlist.UserNotMutualContactError')) {
+           return NextResponse.json({ ok: false, error: 'Xatolik: Bot sizning kontaktingizda emas. Iltimos, botni kontaktingizga qo\'shing.' }, { status: 400 });
+      }
+       if (scriptResult.message.includes('JSON bo\'sh giftlarni qidiryapman')) {
+           return NextResponse.json({ ok: false, error: 'Hozircha yuborish uchun sovg\'alar qolmadi. Iltimos, keyinroq urinib ko\'ring.' }, { status: 400 });
+      }
+      return NextResponse.json({ ok: false, error: `Sovg'ani yuborishda xatolik: ${scriptResult.message}` }, { status: 500 });
+    }
+
+
+    // 3. Skript muvaffaqiyatli bo'lsa, Firestore'dagi ma'lumotlarni yangilash
     const withdrawalRef = adminDb.collection('withdrawals').doc();
     const inventoryItemRef = adminDb.doc(`users/${userId}/inventory/${nftId}`);
 
@@ -22,37 +64,24 @@ export async function POST(request: NextRequest) {
       telegramUsername: telegramUsername,
       nftId: nftId,
       nftName: nftName,
-      status: 'pending',
+      status: 'completed', // Statusni 'completed' ga o'zgartiramiz
       requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
-
-    // 1. Tranzaksiya yordamida Firestore'ga yozish
+    
     await adminDb.runTransaction(async (transaction) => {
         const itemDoc = await transaction.get(inventoryItemRef);
         if (!itemDoc.exists) {
+            // Bu holat kamdan-kam bo'lishi kerak, chunki frontendda tekshiriladi
             throw new Error("Inventardagi NFT topilmadi.");
         }
+        // Yechib olish yozuvini yaratish
         transaction.set(withdrawalRef, withdrawalData);
+        // Inventardan NFTni o'chirish
         transaction.delete(inventoryItemRef);
     });
 
-    // 2. Adminga Telegram orqali xabar yuborish
-    try {
-        await sendTelegramNotification(
-            `📢 Yangi yechib olish so'rovi!\n\n` +
-            `👤 Foydalanuvchi ID: \`${userId}\`\n` +
-            `🎁 NFT Nomi: *${nftName}*\n` +
-            `🎯 Telegram Manzili: \`${telegramUsername}\`\n\n` +
-            `Iltimos, \`auto_relayer.py\` skripti yordamida sovg'ani ushbu manzilga yuboring.`
-        );
-    } catch (telegramError: any) {
-        // Agar telegram xabari ketmasa ham, asosiy so'rov muvaffaqiyatli deb hisoblanadi.
-        // Xatolikni server loglariga yozib qo'yamiz.
-        console.error("Telegram xabarini yuborishda xatolik:", telegramError.message);
-    }
-
-
-    return NextResponse.json({ ok: true, message: 'So\'rov muvaffaqiyatli yaratildi.' });
+    return NextResponse.json({ ok: true, message: 'Sovg\'a muvaffaqiyatli yuborildi va inventardan o\'chirildi.' });
 
   } catch (error: any) {
     console.error('Error in /api/create-withdrawal:', error);
