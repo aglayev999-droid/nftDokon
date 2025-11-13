@@ -15,8 +15,11 @@ service cloud.firestore {
     
     // Function to check if the user is an admin
     function isAdmin() {
-      // An admin's UID must exist in the /admins collection.
-      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // An admin's UID must exist in the /admins collection OR their Telegram ID must be in the hardcoded list.
+      // The telegramId is stored on the user's own document.
+      let isHardcodedAdmin = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.telegramId == "123456789";
+      let isCollectionAdmin = exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isCollectionAdmin || isHardcodedAdmin;
     }
 
     // /users/{userId}
