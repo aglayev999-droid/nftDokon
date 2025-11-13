@@ -166,11 +166,12 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
     })
     .catch((error: any) => {
         if (error.message.includes("permission-denied") || error.code === "permission-denied") {
-             errorEmitter.emit('permission-error', new FirestorePermissionError({
+             const contextualError = new FirestorePermissionError({
                 path: auctionRef.path,
                 operation: 'update',
                 requestResourceData: { highestBid: bidAmount, highestBidderId: userId }
-             }));
+             });
+             errorEmitter.emit('permission-error', contextualError);
         } else {
             console.error("Bid failed:", error);
             toast({ variant: "destructive", title: "Bid Failed", description: error.message });
