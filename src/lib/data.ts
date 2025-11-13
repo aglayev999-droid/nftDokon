@@ -21,8 +21,8 @@ export interface Nft {
   price: number;
   rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
   collection: 'Crypto Critters' | 'Pixel Presents' | 'TON Treasures' | 'Plush Pepe' | 'Fresh Socks';
-  model: 'Common' | 'Rare' | 'Epic' | 'pumpkin';
-  background: 'Space' | 'Neon' | 'Holographic' | 'Rainbow' | 'onyx black';
+  model: 'Common' | 'Rare' | 'Epic' | 'pumpkin' | null;
+  background: 'Space' | 'Neon' | 'Holographic' | 'Rainbow' | 'onyx black' | null;
   symbol?: 'illuminati' | string;
   lottieUrl?: string;
   imageHint: string;
@@ -39,6 +39,7 @@ export interface Nft {
 }
 
 export interface WithdrawalRequest {
+    id: string; // Document ID from Firestore
     userId: string;
     telegramUsername: string;
     nftId: string;

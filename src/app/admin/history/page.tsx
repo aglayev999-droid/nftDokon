@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { WithdrawalRequest, Nft } from '@/lib/data'; // Assuming Nft type is needed
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { WithdrawalRequest } from '@/lib/data';
+import { collection, query, orderBy } from 'firebase/firestore';
 import {
   Table,
   TableBody,
@@ -13,100 +14,81 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState } from 'react';
-
-// Combined type for a richer history view
-interface TransactionHistoryItem {
-  id: string;
-  type: 'Withdrawal' | 'Sale' | 'Purchase';
-  date: Date;
-  details: string;
-  amount?: number;
-  status: 'Completed' | 'Pending'; // Simplified status
-}
+import { useLanguage } from '@/context/language-context';
 
 
 export default function AdminHistoryPage() {
   const firestore = useFirestore();
-  const [history, setHistory] = useState<TransactionHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { translations } = useLanguage();
+  const t = (key: string) => translations[key] || key;
 
-  useEffect(() => {
-    if (!firestore) return;
+  const withdrawalsRef = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'withdrawals') : null),
+    [firestore]
+  );
 
-    const fetchHistory = async () => {
-      setIsLoading(true);
-      const allHistory: TransactionHistoryItem[] = [];
+  const withdrawalsQuery = useMemoFirebase(
+    () => (withdrawalsRef ? query(withdrawalsRef, orderBy('requestedAt', 'desc')) : null),
+    [withdrawalsRef]
+  );
+  
+  const { data: withdrawals, isLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+  
+  const getStatusVariant = (status: 'pending' | 'completed') => {
+    switch (status) {
+        case 'completed':
+            return 'default'; // Uses primary color, often green or blue
+        case 'pending':
+            return 'secondary'; // Muted, greyish background
+        default:
+            return 'outline';
+    }
+  }
+  const getStatusClass = (status: 'pending' | 'completed') => {
+    switch (status) {
+        case 'completed':
+            return 'bg-green-500/20 text-green-400 border-green-500/30';
+        case 'pending':
+            return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        default:
+            return '';
+    }
+  }
 
-      try {
-        // Fetch withdrawals
-        const withdrawalsRef = collection(firestore, 'withdrawals');
-        const withdrawalsQuery = query(withdrawalsRef, orderBy('completedAt', 'desc'));
-        const withdrawalSnap = await getDocs(withdrawalsQuery);
-
-        withdrawalSnap.forEach(doc => {
-          const data = doc.data() as WithdrawalRequest;
-          if (data.completedAt) {
-             allHistory.push({
-              id: doc.id,
-              type: 'Withdrawal',
-              date: (data.completedAt as any).toDate(),
-              details: `NFT "${data.nftName}" to @${data.telegramUsername}`,
-              amount: 0, // No monetary value for withdrawal
-              status: 'Completed',
-            });
-          }
-        });
-        
-        // In the future, you would also fetch sales and purchases from a dedicated 'transactions' collection.
-        // For now, we only have withdrawals.
-
-        // Sort all history items by date, descending
-        allHistory.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-        setHistory(allHistory);
-      } catch (error) {
-        console.error("Error fetching transaction history:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchHistory();
-  }, [firestore]);
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Tranzaksiyalar Tarixi</h2>
+      <h2 className="text-2xl font-semibold mb-4">Pul Yechib Olish Tarixi</h2>
       
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Turi</TableHead>
+              <TableHead>Foydalanuvchi</TableHead>
+              <TableHead>NFT</TableHead>
               <TableHead>Sana</TableHead>
-              <TableHead>Tafsilotlar</TableHead>
               <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                 <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-40" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-6 w-20 ml-auto" /></TableCell>
               </TableRow>
             ))}
-            {!isLoading && history.map(item => (
+            {!isLoading && withdrawals?.map(item => (
               <TableRow key={item.id}>
                 <TableCell>
-                   <Badge variant={item.type === 'Withdrawal' ? 'secondary' : 'default'}>{item.type}</Badge>
+                  <div className="font-medium">@{item.telegramUsername}</div>
+                  <div className="text-xs text-muted-foreground">{item.userId}</div>
                 </TableCell>
-                <TableCell>{item.date.toLocaleString()}</TableCell>
-                <TableCell className="font-medium">{item.details}</TableCell>
+                <TableCell>{item.nftName}</TableCell>
+                <TableCell>{item.requestedAt?.toDate().toLocaleString()}</TableCell>
                 <TableCell className="text-right">
-                  <Badge variant={item.status === 'Completed' ? 'default' : 'outline'} className="bg-green-500/20 text-green-400 border-green-500/30">
+                  <Badge variant={getStatusVariant(item.status)} className={getStatusClass(item.status)}>
                     {item.status}
                   </Badge>
                 </TableCell>
@@ -116,9 +98,9 @@ export default function AdminHistoryPage() {
         </Table>
       </div>
 
-      {!isLoading && history.length === 0 && (
+      {!isLoading && withdrawals?.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
-          Hozircha tranzaksiyalar mavjud emas.
+          Hozircha pul yechib olishlar mavjud emas.
         </div>
       )}
     </div>

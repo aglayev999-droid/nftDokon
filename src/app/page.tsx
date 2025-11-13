@@ -37,14 +37,104 @@ import {
 import { useLanguage } from '@/context/language-context';
 import { NftCard } from '@/components/nft-card';
 import { useNft } from '@/context/nft-context';
+import { useState, useMemo } from 'react';
+import type { Nft } from '@/lib/data';
+
+type SortOption = 'price-low-high' | 'price-high-low' | 'newest' | 'rarity';
 
 export default function MarketplacePage() {
   const { translations } = useLanguage();
   const { marketplaceNfts, isLoading } = useNft();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState<SortOption>('price-low-high');
+  const [filters, setFilters] = useState({
+    collections: new Set<string>(),
+    models: new Set<string>(),
+    backgrounds: new Set<string>(),
+    price: { min: '', max: '' },
+  });
 
   const t = (key: string) => {
     return translations[key] || key;
   };
+
+  const handleFilterChange = (category: 'collections' | 'models' | 'backgrounds', value: string) => {
+    setFilters(prev => {
+      const newSet = new Set(prev[category]);
+      if (newSet.has(value)) {
+        newSet.delete(value);
+      } else {
+        newSet.add(value);
+      }
+      return { ...prev, [category]: newSet };
+    });
+  };
+
+  const handlePriceFilterChange = (field: 'min' | 'max', value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      price: { ...prev.price, [field]: value }
+    }));
+  };
+
+  const filteredAndSortedNfts = useMemo(() => {
+    let filtered = marketplaceNfts;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(nft =>
+        nft.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        nft.id.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Checkbox filters
+    if (filters.collections.size > 0) {
+      filtered = filtered.filter(nft => filters.collections.has(nft.collection));
+    }
+    if (filters.models.size > 0) {
+      filtered = filtered.filter(nft => nft.model && filters.models.has(nft.model));
+    }
+    if (filters.backgrounds.size > 0) {
+        filtered = filtered.filter(nft => nft.background && filters.backgrounds.has(nft.background));
+    }
+
+    // Price filter
+    const minPrice = parseFloat(filters.price.min);
+    const maxPrice = parseFloat(filters.price.max);
+    if (!isNaN(minPrice)) {
+      filtered = filtered.filter(nft => nft.price >= minPrice);
+    }
+    if (!isNaN(maxPrice)) {
+      filtered = filtered.filter(nft => nft.price <= maxPrice);
+    }
+
+
+    // Sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortOption) {
+        case 'price-low-high':
+          return a.price - b.price;
+        case 'price-high-low':
+          return b.price - a.price;
+        case 'newest':
+          // Assuming a timestamp 'createdAt' exists. If not, this won't work correctly.
+          // Let's fallback to id as a proxy for creation time if no timestamp.
+          return (b.id > a.id) ? 1 : -1;
+        case 'rarity':
+            const rarityOrder = { 'Common': 0, 'Rare': 1, 'Epic': 2, 'Legendary': 3 };
+            return (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [marketplaceNfts, searchTerm, sortOption, filters]);
+
+  const allCollections = ['TON Treasures', 'Plush Pepe', 'Fresh Socks'];
+  const allModels = ['Common', 'Rare', 'Epic', 'pumpkin'];
+  const allBackgrounds = ['Space', 'Neon', 'Holographic', 'Rainbow', 'onyx black'];
 
   const filtersContent = (
     <Card className="border-none shadow-none">
@@ -57,7 +147,12 @@ export default function MarketplacePage() {
       <CardContent className="space-y-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder={t('searchByNameOrId')} className="pl-10" />
+          <Input 
+            placeholder={t('searchByNameOrId')} 
+            className="pl-10" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            />
         </div>
 
         <Accordion type="multiple" defaultValue={['collections', 'price']}>
@@ -66,28 +161,21 @@ export default function MarketplacePage() {
               {t('collections')}
             </AccordionTrigger>
             <AccordionContent className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="col-crypto-critters" />
-                <Label htmlFor="col-crypto-critters">Crypto Critters</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="col-pixel-presents" />
-                <Label htmlFor="col-pixel-presents">Pixel Presents</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="col-ton-treasures" />
-                <Label htmlFor="col-ton-treasures">TON Treasures</Label>
-              </div>
+              {allCollections.map(col => (
+                <div key={col} className="flex items-center space-x-2">
+                  <Checkbox id={`col-${col}`} onCheckedChange={() => handleFilterChange('collections', col)} />
+                  <Label htmlFor={`col-${col}`}>{col}</Label>
+                </div>
+              ))}
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="price">
             <AccordionTrigger className="font-semibold">{t('price')}</AccordionTrigger>
             <AccordionContent className="space-y-4">
               <div className="flex gap-2">
-                <Input type="number" placeholder={t('min')} />
-                <Input type="number" placeholder={t('max')} />
+                <Input type="number" placeholder={t('min')} value={filters.price.min} onChange={e => handlePriceFilterChange('min', e.target.value)} />
+                <Input type="number" placeholder={t('max')} value={filters.price.max} onChange={e => handlePriceFilterChange('max', e.target.value)} />
               </div>
-              <Button className="w-full">{t('apply')}</Button>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="model">
@@ -95,18 +183,12 @@ export default function MarketplacePage() {
               {t('model')}
             </AccordionTrigger>
             <AccordionContent className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="model-common" />
-                <Label htmlFor="model-common">{t('common')}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="model-rare" />
-                <Label htmlFor="model-rare">{t('rare')}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="model-epic" />
-                <Label htmlFor="model-epic">{t('epic')}</Label>
-              </div>
+              {allModels.map(model => (
+                 <div key={model} className="flex items-center space-x-2">
+                  <Checkbox id={`model-${model}`} onCheckedChange={() => handleFilterChange('models', model)} />
+                  <Label htmlFor={`model-${model}`}>{t(model.toLowerCase()) || model}</Label>
+                </div>
+              ))}
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="background">
@@ -114,18 +196,12 @@ export default function MarketplacePage() {
               {t('background')}
             </AccordionTrigger>
             <AccordionContent className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="bg-space" />
-                <Label htmlFor="bg-space">{t('space')}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="bg-neon" />
-                <Label htmlFor="bg-neon">{t('neon')}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="bg-holographic" />
-                <Label htmlFor="bg-holographic">{t('holographic')}</Label>
-              </div>
+               {allBackgrounds.map(bg => (
+                <div key={bg} className="flex items-center space-x-2">
+                  <Checkbox id={`bg-${bg}`} onCheckedChange={() => handleFilterChange('backgrounds', bg)} />
+                  <Label htmlFor={`bg-${bg}`}>{t(bg.toLowerCase()) || bg}</Label>
+                </div>
+               ))}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -164,7 +240,7 @@ export default function MarketplacePage() {
                   </div>
                 </SheetContent>
               </Sheet>
-              <Select defaultValue="price-low-high">
+              <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
                 <SelectTrigger className="w-full sm:w-[180px] flex-1">
                   <SelectValue placeholder={t('sortBy')} />
                 </SelectTrigger>
@@ -181,9 +257,9 @@ export default function MarketplacePage() {
              <div className="col-span-full text-center py-16">
                 <p className="text-muted-foreground">Bozor yuklanmoqda...</p>
              </div>
-          ) : marketplaceNfts.length > 0 ? (
+          ) : filteredAndSortedNfts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {marketplaceNfts.map((nft) => (
+                {filteredAndSortedNfts.map((nft) => (
                   <NftCard key={nft.id} nft={nft} action="buy"/>
                 ))}
             </div>
@@ -197,5 +273,3 @@ export default function MarketplacePage() {
     </div>
   );
 }
-
-    
