@@ -30,6 +30,12 @@ export async function POST(request: NextRequest) {
       scriptError += data.toString();
       console.error(`Python stderr: ${data}`);
     });
+    
+    // Handle spawn errors, e.g., command not found
+    pythonProcess.on('error', (err) => {
+        console.error('Failed to start subprocess.', err);
+        scriptError += `Failed to start script: ${err.message}. Make sure python3 is installed and in the system's PATH.`;
+    });
 
     const scriptResult = await new Promise<{ success: boolean; message: string }>((resolve) => {
         pythonProcess.on('close', (code) => {
@@ -37,6 +43,7 @@ export async function POST(request: NextRequest) {
             if (code === 0 && scriptOutput.includes('✅ Gift muvaffaqiyatli yuborildi')) {
                 resolve({ success: true, message: 'Sovg\'a muvaffaqiyatli yuborildi.' });
             } else {
+                // Prepend spawn error if it exists
                 resolve({ success: false, message: scriptError || scriptOutput || 'Skriptni ishga tushirishda noma\'lum xatolik.' });
             }
         });
