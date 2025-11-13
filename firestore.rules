@@ -51,7 +51,8 @@ service cloud.firestore {
     // /marketplace/{nftId}
     match /marketplace/{nftId} {
       // ANYONE can read the list of items for sale or a specific item.
-      allow get, list: if true;
+      // Using `read` is more robust for offline caching than `get, list`.
+      allow read: if true;
       
       // CREATE: An NFT can be created here only if it's coming from the owner's inventory.
       // The `setNftForSale` transaction handles this logic, so we allow signed-in users.
