@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, message: 'Sovg\'a muvaffaqiyatli yuborildi va inventardan o\'chirildi.' });
 
-  } catch (error: any) => {
+  } catch (error: any) {
     console.error('Error in /api/create-withdrawal:', error);
     return NextResponse.json({ ok: false, error: error.message || 'Serverda noma\'lum xatolik yuz berdi.' }, { status: 500 });
   }
