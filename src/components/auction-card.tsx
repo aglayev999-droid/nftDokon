@@ -1,7 +1,6 @@
 
 'use client';
 
-import Image from 'next/image';
 import type { Nft } from '@/lib/data';
 import { Button } from './ui/button';
 import {
@@ -14,8 +13,9 @@ import {
 import { Tag, Timer } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { useState, useEffect } from 'react';
-import { LottiePlayer } from './lottie-player';
 import { useNft } from '@/context/nft-context';
+import Lottie from 'lottie-react';
+import { Skeleton } from './ui/skeleton';
 
 interface AuctionCardProps {
   nft: Nft;
@@ -24,6 +24,17 @@ interface AuctionCardProps {
 export function AuctionCard({ nft }: AuctionCardProps) {
   const { translations } = useLanguage();
   const { placeBid } = useNft();
+  const [animationData, setAnimationData] = useState(null);
+
+  useEffect(() => {
+    if (nft.lottieUrl) {
+      fetch(nft.lottieUrl)
+        .then(response => response.json())
+        .then(data => setAnimationData(data))
+        .catch(() => setAnimationData(null));
+    }
+  }, [nft.lottieUrl]);
+
   const t = (key: string, params?: { [key: string]: string | number }) => {
     let translation = translations[key] || key;
     if (params) {
@@ -83,11 +94,11 @@ export function AuctionCard({ nft }: AuctionCardProps) {
     <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
         <div className="relative aspect-square w-full">
-          {nft.lottieUrl ? (
-            <LottiePlayer src={nft.lottieUrl} />
+          {animationData ? (
+             <Lottie animationData={animationData} loop={true} autoplay={true} style={{ width: '100%', height: '100%' }}/>
           ) : (
             <div className="w-full h-full bg-secondary flex items-center justify-center">
-                <span className="text-muted-foreground text-xs">No Animation</span>
+                {nft.lottieUrl ? <Skeleton className="w-full h-full" /> : <span className="text-muted-foreground text-xs">No Animation</span>}
             </div>
           )}
         </div>

@@ -1,15 +1,17 @@
+
 'use client';
 
-import Image from 'next/image';
 import type { Nft } from '@/lib/data';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { Tag, Send, BarChart, Share2, Diamond } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { DialogHeader, DialogTitle } from './ui/dialog';
-import { LottiePlayer } from './lottie-player';
 import { useNft } from '@/context/nft-context';
 import { useUser } from '@/firebase';
+import { useEffect, useState } from 'react';
+import Lottie from 'lottie-react';
+import { Skeleton } from './ui/skeleton';
 
 interface NftDetailDialogProps {
   nft: Nft;
@@ -20,6 +22,16 @@ export function NftDetailDialog({ nft, action = 'buy' }: NftDetailDialogProps) {
   const { translations } = useLanguage();
   const { buyNft } = useNft();
   const { user: currentUser } = useUser();
+  const [animationData, setAnimationData] = useState(null);
+
+  useEffect(() => {
+    if (nft.lottieUrl) {
+      fetch(nft.lottieUrl)
+        .then(response => response.json())
+        .then(data => setAnimationData(data))
+        .catch(() => setAnimationData(null));
+    }
+  }, [nft.lottieUrl]);
   
   const t = (key: string, params?: { [key: string]: any }) => {
     let translation = translations[key] || key;
@@ -88,11 +100,11 @@ export function NftDetailDialog({ nft, action = 'buy' }: NftDetailDialogProps) {
         <DialogTitle>{nft.name}</DialogTitle>
       </DialogHeader>
       <div className="relative aspect-square max-w-sm mx-auto mt-6">
-        {nft.lottieUrl ? (
-            <LottiePlayer src={nft.lottieUrl} />
+        {animationData ? (
+             <Lottie animationData={animationData} loop={true} autoplay={true} style={{ width: '100%', height: '100%' }}/>
           ) : (
             <div className="w-full h-full bg-secondary flex items-center justify-center rounded-2xl">
-                <span className="text-muted-foreground text-sm">No Animation</span>
+                {nft.lottieUrl ? <Skeleton className="w-full h-full" /> : <span className="text-muted-foreground text-sm">No Animation</span>}
             </div>
         )}
       </div>

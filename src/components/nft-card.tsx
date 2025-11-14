@@ -1,6 +1,5 @@
 
 'use client';
-import Image from 'next/image';
 import type { Nft } from '@/lib/data';
 import { Button } from './ui/button';
 import {
@@ -29,12 +28,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from './ui/alert-dialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNft } from '@/context/nft-context';
-import { LottiePlayer } from './lottie-player';
+import Lottie from 'lottie-react';
+import { Skeleton } from './ui/skeleton';
 import { useUser } from '@/firebase';
 
 interface NftCardProps {
@@ -48,6 +48,18 @@ export function NftCard({ nft, action = 'buy', onWithdrawClick }: NftCardProps) 
   const { setNftForSale, removeNftFromSale, addNftToAuctions, buyNft } = useNft();
   const { user: currentUser } = useUser();
   const { toast } = useToast();
+  
+  const [animationData, setAnimationData] = useState(null);
+
+  useEffect(() => {
+    if (nft.lottieUrl) {
+      fetch(nft.lottieUrl)
+        .then(response => response.json())
+        .then(data => setAnimationData(data))
+        .catch(() => setAnimationData(null));
+    }
+  }, [nft.lottieUrl]);
+
 
   const [price, setPrice] = useState('');
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
@@ -253,11 +265,11 @@ export function NftCard({ nft, action = 'buy', onWithdrawClick }: NftCardProps) 
      <Card className="overflow-hidden group transition-all duration-300 hover:border-primary/50">
       <CardHeader className="p-0">
         <div className="relative aspect-square w-full">
-          {nft.lottieUrl ? (
-            <LottiePlayer src={nft.lottieUrl} />
+           {animationData ? (
+             <Lottie animationData={animationData} loop={true} autoplay={true} style={{ width: '100%', height: '100%' }}/>
           ) : (
-             <div className="w-full h-full bg-secondary flex items-center justify-center">
-                <span className="text-muted-foreground text-xs">No Animation</span>
+            <div className="w-full h-full bg-secondary flex items-center justify-center">
+                {nft.lottieUrl ? <Skeleton className="w-full h-full" /> : <span className="text-muted-foreground text-xs">No Animation</span>}
             </div>
           )}
           <div className="absolute top-2 right-2 bg-background/70 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-bold text-accent">
