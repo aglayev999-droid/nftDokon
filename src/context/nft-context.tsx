@@ -18,7 +18,7 @@ import {
   errorEmitter,
   FirestorePermissionError,
 } from '@/firebase';
-import { collection, doc, runTransaction, FirestoreError, WithFieldValue, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, increment, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, runTransaction, WithFieldValue, writeBatch, getDoc, setDoc, deleteDoc, serverTimestamp, increment, getDocs, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramUser } from './telegram-user-context';
@@ -74,10 +74,10 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
         try {
             const userDoc = await getDoc(userDocRef);
             if (!userDoc.exists()) {
-                 // Extract referral ID from URL search params
-                const params = new URLSearchParams(window.location.search);
-                const startParam = params.get('start');
-                const refId = startParam && startParam.startsWith('ref_') ? startParam.replace('ref_', '') : null;
+                 // Extract referral ID from start param if it exists (e.g. from a referral link)
+                 const params = new URLSearchParams(window.location.search);
+                 const tgWebAppStartParam = params.get('tgWebAppStartParam');
+                 const refId = tgWebAppStartParam && tgWebAppStartParam.startsWith('ref_') ? tgWebAppStartParam.replace('ref_', '') : null;
 
                 const userAccountData: UserAccount = {
                     id: userId,
@@ -92,7 +92,9 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
                     referralEarnings: 0,
                     ...(refId && { referredBy: refId }), // Add referredBy if refId exists
                 };
+                
                 await setDoc(userDocRef, userAccountData);
+                console.log(`New user bootstrapped: ${userId}`);
 
                 // If referred, update the referrer's count
                 if (refId) {
@@ -104,6 +106,9 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
                   if (!referrerQuerySnapshot.empty) {
                     const referrerDoc = referrerQuerySnapshot.docs[0];
                     await setDoc(referrerDoc.ref, { referrals: increment(1) }, { merge: true });
+                    console.log(`Referrer ${referrerDoc.id} updated.`);
+                  } else {
+                    console.warn(`Referrer with Telegram ID ${refId} not found.`);
                   }
                 }
             }
@@ -112,7 +117,7 @@ export const NftProvider = ({ children }: { children: ReactNode }) => {
             if (error.code === 'permission-denied') {
                 const contextualError = new FirestorePermissionError({
                     path: userDocRef.path,
-                    operation: 'write',
+                    operation: 'create', // Corrected operation type
                     requestResourceData: { userId, telegramUser }
                 });
                 errorEmitter.emit('permission-error', contextualError);
@@ -363,5 +368,3 @@ export const useNft = () => {
   }
   return context;
 };
-
-    
