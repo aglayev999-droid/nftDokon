@@ -86,7 +86,10 @@ service cloud.firestore {
 
     // /withdrawals/{withdrawalId}
     match /withdrawals/{withdrawalId} {
-      allow read, write: if false;
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update: if isAdmin(); // Allow admins to update status
+      allow delete: if false;
     }
   }
 }
