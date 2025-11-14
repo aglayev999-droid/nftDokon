@@ -41,6 +41,16 @@ export async function POST(request: NextRequest) {
             // This case happens if no one bid, or the owner "won" their own auction (no other bids).
             // The NFT should be returned to the owner.
             console.log(`Auction ${auctionId} ended with no valid higher bids. Returning to owner.`);
+            
+            // CRITICAL FIX: Ensure ownerId is valid before proceeding.
+            if (!ownerId) {
+                // This is a server-level issue, the auction document is corrupted.
+                console.error(`CRITICAL: Cannot return NFT for auction ${auctionId} because ownerId is missing.`);
+                // Delete the corrupted auction to prevent it from being processed again.
+                transaction.delete(auctionRef);
+                throw new Error(`Auction data is corrupted: ownerId is missing.`);
+            }
+
             const ownerInventoryRef = adminDb.collection('users').doc(ownerId).collection('inventory').doc(auctionId);
             
             // Create a clean NFT object to return, removing all auction-specific fields.
@@ -53,7 +63,6 @@ export async function POST(request: NextRequest) {
                 model: auctionData.model,
                 background: auctionData.background,
                 symbol: auctionData.symbol,
-                imageUrl: auctionData.imageUrl,
                 lottieUrl: auctionData.lottieUrl,
                 imageHint: auctionData.imageHint,
                 isListed: false,
@@ -105,7 +114,6 @@ export async function POST(request: NextRequest) {
             model: auctionData.model,
             background: auctionData.background,
             symbol: auctionData.symbol,
-            imageUrl: auctionData.imageUrl,
             lottieUrl: auctionData.lottieUrl,
             imageHint: auctionData.imageHint,
             isListed: false,
