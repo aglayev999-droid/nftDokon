@@ -133,10 +133,10 @@ export function NftDetailDialog({ nft, action = 'buy' }: NftDetailDialogProps) {
         
         <div className="space-y-2">
             {detailRow(t('collection'), nft.collection)}
-            {detailRow(t('model'), nft.model)}
+            {detailRow(t('model'), nft.model || undefined)}
             {detailRow('Symbol', nft.symbol)}
             {detailRow(t('rarity'), nft.rarity)}
-            {detailRow(t('background'), nft.background)}
+            {detailRow(t('background'), nft.background || undefined)}
         </div>
 
         <Separator />
