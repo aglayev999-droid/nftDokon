@@ -1,5 +1,5 @@
 
-import { Bot } from 'telegram';
+import { Telegraf } from 'telegraf';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,14 +10,14 @@ if (!BOT_TOKEN) {
     console.warn("Telegram environment variable TELEGRAM_BOT_TOKEN is not set.");
 }
 
-const bot = new Bot(BOT_TOKEN || "");
+const bot = new Telegraf(BOT_TOKEN || "");
 
 /**
  * Sends a notification message to a specific chat via Telegram.
  * @param chatId The ID of the chat to send the message to.
  * @param message The text of the message to send. Supports Markdown.
  */
-export async function sendTelegramNotification(chatId: string, message: string): Promise<void> {
+export async function sendTelegramNotification(chatId: string | number, message: string): Promise<void> {
   if (!BOT_TOKEN) {
     throw new Error("Telegram bot is not configured on the server.");
   }
@@ -26,11 +26,7 @@ export async function sendTelegramNotification(chatId: string, message: string):
   }
 
   try {
-    await bot.api.sendMessage({
-      chat_id: chatId,
-      text: message,
-      parse_mode: 'Markdown',
-    });
+    await bot.telegram.sendMessage(chatId, message, { parse_mode: 'Markdown' });
     console.log(`User (${chatId}) ga xabar muvaffaqiyatli yuborildi.`);
   } catch (error) {
     console.error("Foydalanuvchiga xabar yuborishda xatolik yuz berdi:", error);
