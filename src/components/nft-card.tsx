@@ -14,6 +14,10 @@ import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { NftDetailDialog } from './nft-detail-dialog';
