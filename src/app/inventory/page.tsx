@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { NftCard } from '@/components/nft-card';
 import { Nft } from '@/lib/data';
 import { PlusCircle, Upload, Send, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/context/language-context';
 import {
   Dialog,
@@ -27,12 +27,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNft } from '@/context/nft-context';
 import { useUser } from '@/firebase';
 import { useTelegramUser } from '@/context/telegram-user-context';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+type FilterTab = 'all' | 'listed' | 'unlisted';
 
 export default function InventoryPage() {
   const { inventoryNfts, isLoading } = useNft();
@@ -41,6 +44,8 @@ export default function InventoryPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
   const [telegramUsername, setTelegramUsername] = useState('');
+  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+
   const { translations } = useLanguage();
   const { user: firebaseUser } = useUser();
   const { user: telegramUser } = useTelegramUser();
@@ -61,6 +66,16 @@ export default function InventoryPage() {
         setTelegramUsername(`@${telegramUser.username}`);
     }
   }, [telegramUser]);
+
+  const filteredNfts = useMemo(() => {
+    if (activeTab === 'listed') {
+      return inventoryNfts.filter(nft => nft.isListed);
+    }
+    if (activeTab === 'unlisted') {
+      return inventoryNfts.filter(nft => !nft.isListed);
+    }
+    return inventoryNfts;
+  }, [inventoryNfts, activeTab]);
 
   const handleDeposit = async () => {
     if (!firebaseUser || !telegramUser) return;
@@ -155,6 +170,35 @@ export default function InventoryPage() {
     }
   };
 
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="text-center py-16">
+            <p className="text-muted-foreground">{t('inventoryLoading') || 'Inventar yuklanmoqda...'}</p>
+        </div>
+      );
+    }
+    if (filteredNfts.length > 0) {
+      return (
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredNfts.map((nft) => (
+            <NftCard key={nft.id} nft={nft} action="manage" onWithdrawClick={() => handleSelectNftForWithdraw(nft)} />
+          ))}
+        </div>
+      );
+    }
+    // Specific message for empty tab
+    let emptyMessage = t('inventoryEmpty');
+    if (activeTab === 'listed') emptyMessage = t('noListedNfts');
+    if (activeTab === 'unlisted') emptyMessage = t('noUnlistedNfts');
+
+    return (
+        <div className="text-center py-16">
+          <p className="text-muted-foreground">{emptyMessage}</p>
+        </div>
+    );
+  };
+
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -176,22 +220,17 @@ export default function InventoryPage() {
 
         </div>
       </div>
+      
+       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FilterTab)} className="w-full mb-6">
+        <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsTrigger value="all">{t('all')} ({inventoryNfts.length})</TabsTrigger>
+            <TabsTrigger value="listed">{t('listed')} ({inventoryNfts.filter(n => n.isListed).length})</TabsTrigger>
+            <TabsTrigger value="unlisted">{t('unlisted')} ({inventoryNfts.filter(n => !n.isListed).length})</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-       {isLoading ? (
-        <div className="col-span-full text-center py-16">
-            <p className="text-muted-foreground">Inventar yuklanmoqda...</p>
-        </div>
-       ) : inventoryNfts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {inventoryNfts.map((nft) => (
-                <NftCard key={nft.id} nft={nft} action="manage" onWithdrawClick={() => handleSelectNftForWithdraw(nft)} />
-              ))}
-            </div>
-          ) : (
-            <div className="col-span-full text-center py-16">
-              <p className="text-muted-foreground">{t('inventoryEmpty')}</p>
-            </div>
-       )}
+      {renderContent()}
+
 
       <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
         <DialogContent>
@@ -242,3 +281,5 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    

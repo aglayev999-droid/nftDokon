@@ -129,5 +129,8 @@
   "confirm": "Tasdiqlash",
   "unlistSuccessTitle": "NFT sotuvdan olindi",
   "unlistSuccessDescription": "{nftName} bozordan olib tashlandi.",
-  "symbol": "Simvol"
+  "symbol": "Simvol",
+  "inventoryLoading": "Inventar yuklanmoqda..."
 }
+
+    
